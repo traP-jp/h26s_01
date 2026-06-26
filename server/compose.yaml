@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: h26s_01
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+
+  mariadb:
+    image: mariadb:10.11.18-jammy@sha256:5a5c675881ef3fd1c1da9b0a3bfd6ee82edbe39cd9e32e06be18034c37235e0e
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: h26s_01
+    volumes:
+      - type: volume
+        source: mariadb_data
+        target: /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  adminer:
+    image: adminer:5.4.2@sha256:4dae499420bb9ba8c5d73745e5c8e02b696acd214b66b5f2946eceee7f171fee
+    ports:
+      - 8080:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: mariadb
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
