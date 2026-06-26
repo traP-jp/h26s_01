@@ -1,7 +1,7 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 
-import HomeView from '@/views/HomeView.vue'
-import MockCheckView from '@/views/MockCheckView.vue'
+import HomeView from '@/views/HomeView.vue';
+import MockCheckView from '@/views/MockCheckView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,6 +17,6 @@ const router = createRouter({
       component: MockCheckView,
     },
   ],
-})
+});
 
-export default router
+export default router;

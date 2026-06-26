@@ -1,82 +1,82 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { io, type Socket } from 'socket.io-client'
+import { io, type Socket } from 'socket.io-client';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { apiClient } from '@/api/client'
+import { apiClient } from '@/api/client';
 
 type MockPongPayload = {
-  ok: boolean
-  sentAt: string
-  receivedAt: string
-}
+  ok: boolean;
+  sentAt: string;
+  receivedAt: string;
+};
 
-const restStatus = ref('not checked')
-const socketStatus = ref('not connected')
-const pongStatus = ref('not checked')
+const restStatus = ref('not checked');
+const socketStatus = ref('not connected');
+const pongStatus = ref('not checked');
 
-let socket: Socket | undefined
+let socket: Socket | undefined;
 
 async function checkRest() {
-  restStatus.value = 'checking'
+  restStatus.value = 'checking';
 
   try {
-    const { data, error } = await apiClient.GET('/mock/status')
+    const { data, error } = await apiClient.GET('/mock/status');
 
     if (error) {
-      restStatus.value = 'request failed'
-      return
+      restStatus.value = 'request failed';
+      return;
     }
 
-    restStatus.value = `${data.status} (${data.service}, ${data.now})`
+    restStatus.value = `${data.status} (${data.service}, ${data.now})`;
   } catch (error) {
-    restStatus.value = error instanceof Error ? error.message : 'request failed'
+    restStatus.value = error instanceof Error ? error.message : 'request failed';
   }
 }
 
 function connectSocket() {
   if (socket) {
-    return
+    return;
   }
 
-  socketStatus.value = 'connecting'
-  socket = io({ path: '/socket.io' })
+  socketStatus.value = 'connecting';
+  socket = io({ path: '/socket.io' });
 
   socket.on('connect', () => {
-    socketStatus.value = `connected (${socket?.id ?? 'unknown'})`
-  })
+    socketStatus.value = `connected (${socket?.id ?? 'unknown'})`;
+  });
 
   socket.on('disconnect', (reason) => {
-    socketStatus.value = `disconnected (${reason})`
-  })
+    socketStatus.value = `disconnected (${reason})`;
+  });
 
   socket.on('connect_error', (error) => {
-    socketStatus.value = error.message
-  })
+    socketStatus.value = error.message;
+  });
 
   socket.on('mock:pong', (payload: MockPongPayload) => {
-    pongStatus.value = `${payload.ok ? 'ok' : 'ng'} (${payload.receivedAt})`
-  })
+    pongStatus.value = `${payload.ok ? 'ok' : 'ng'} (${payload.receivedAt})`;
+  });
 }
 
 function sendPing() {
   if (!socket?.connected) {
-    pongStatus.value = 'socket is not connected'
-    return
+    pongStatus.value = 'socket is not connected';
+    return;
   }
 
-  pongStatus.value = 'waiting'
-  socket.emit('mock:ping', { sentAt: new Date().toISOString() })
+  pongStatus.value = 'waiting';
+  socket.emit('mock:ping', { sentAt: new Date().toISOString() });
 }
 
 onMounted(() => {
-  void checkRest()
-  connectSocket()
-})
+  void checkRest();
+  connectSocket();
+});
 
 onBeforeUnmount(() => {
-  socket?.disconnect()
-  socket = undefined
-})
+  socket?.disconnect();
+  socket = undefined;
+});
 </script>
 
 <template>
