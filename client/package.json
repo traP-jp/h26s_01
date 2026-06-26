@@ -8,11 +8,16 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
+    "check": "run-p format:check lint:check type-check",
     "type-check": "vue-tsc --build",
-    "lint": "run-s \"lint:*\"",
+    "lint": "run-s lint:oxlint lint:eslint",
+    "lint:check": "run-p lint:oxlint:check lint:eslint:check",
     "lint:oxlint": "oxlint . --fix",
+    "lint:oxlint:check": "oxlint . --deny-warnings",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "oxfmt src/"
+    "lint:eslint:check": "eslint . --max-warnings=0",
+    "format": "oxfmt src/",
+    "format:check": "oxfmt src/ --check"
   },
   "dependencies": {
     "pinia": "^3.0.4",
@@ -40,6 +45,6 @@
     "vue-tsc": "^3.3.5"
   },
   "engines": {
-    "node": "^22.18.0 || >=24.12.0"
+    "node": "^22.22.2 || >=24.15.0"
   }
 }
