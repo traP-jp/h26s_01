@@ -1,0 +1,37 @@
+openapi: 3.1.0
+info:
+  title: h26s_01 mock verification API
+  version: 0.0.0
+  description: Development-only API for checking the mock server wiring. This is not the production API contract.
+servers:
+  - url: /api
+paths:
+  /mock/status:
+    get:
+      operationId: getMockStatus
+      summary: Check mock server status
+      responses:
+        '200':
+          description: Mock server status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockStatus'
+components:
+  schemas:
+    MockStatus:
+      type: object
+      required:
+        - status
+        - service
+        - now
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+          const: mock-server
+        now:
+          type: string
+          format: date-time

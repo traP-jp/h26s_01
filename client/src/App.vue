@@ -2,7 +2,12 @@
 
 <template>
   <main>
-    <h1>h26s_01</h1>
+    <nav>
+      <RouterLink to="/">Home</RouterLink>
+      <RouterLink to="/mock-check">Mock Check</RouterLink>
+    </nav>
+
+    <RouterView />
   </main>
 </template>
 

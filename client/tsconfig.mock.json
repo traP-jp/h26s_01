@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "include": ["mock/**/*.ts"],
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "noEmit": true
+  }
+}
