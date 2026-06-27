@@ -22,7 +22,7 @@ func parseKanji() ([]Kanji, error) {
 		return nil, err
 	}
 
-	var kanjis []Kanji
+	kanjis := make([]Kanji, 0, len(records)-1)
 	for _, record := range records[1:] {
 		kanji := record[1]
 		stroke, err := strconv.Atoi(record[3])
