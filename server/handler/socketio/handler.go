@@ -18,11 +18,11 @@ type Handler struct {
 }
 
 func NewHandler(repo *repository.Repository) *Handler {
-	io := socket.NewServer(nil, nil)
+	ioServer := socket.NewServer(nil, nil)
 
 	return &Handler{
-		ServeHandler: io.ServeHandler(nil),
-		io:           socket.NewServer(nil, nil),
+		ServeHandler: ioServer.ServeHandler(nil),
+		io:           ioServer,
 		repo:         repo,
 	}
 }
