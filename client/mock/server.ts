@@ -231,6 +231,30 @@ const advanceTurn = (room: Room, game: MockGameState) => {
   emitTurnStarted(room, game)
 }
 
+const createRoundRoles = (room: Room, roundIndex: number) => {
+  const reversedMembers = [...room.members].reverse()
+  const guesser = reversedMembers[(roundIndex - 1) % reversedMembers.length]
+
+  if (guesser === undefined) {
+    return null
+  }
+
+  const drawerIds = room.members
+    .map((member) => member.id)
+    .filter((memberId) => memberId !== guesser.id)
+  const currentDrawerId = drawerIds[0]
+
+  if (currentDrawerId === undefined) {
+    return null
+  }
+
+  return {
+    currentDrawerId,
+    drawerIds,
+    guesserId: guesser.id,
+  }
+}
+
 const completeCurrentRound = (game: MockGameState) => {
   game.completedRounds.push({
     id: randomUUID(),
@@ -250,7 +274,16 @@ const startNextRound = (room: Room, game: MockGameState) => {
   }
 
   game.roundIndex += 1
+  const roles = createRoundRoles(room, game.roundIndex)
+
+  if (roles === null) {
+    return false
+  }
+
   game.turnIndex = 1
+  game.guesserId = roles.guesserId
+  game.drawerIds = roles.drawerIds
+  game.currentDrawerId = roles.currentDrawerId
   game.strokes = []
   game.roundStartedAt = Date.now()
   game.guesserAnswer = null
@@ -268,18 +301,9 @@ const startGameIfReady = (room: Room) => {
     return
   }
 
-  const guesser = room.members.at(-1)
+  const roles = createRoundRoles(room, 1)
 
-  if (guesser === undefined) {
-    return
-  }
-
-  const drawerIds = room.members
-    .map((member) => member.id)
-    .filter((memberId) => memberId !== guesser.id)
-  const currentDrawerId = drawerIds[0]
-
-  if (currentDrawerId === undefined) {
+  if (roles === null) {
     return
   }
 
@@ -289,9 +313,9 @@ const startGameIfReady = (room: Room) => {
     roomId: room.id,
     roundIndex: 1,
     turnIndex: 1,
-    guesserId: guesser.id,
-    drawerIds,
-    currentDrawerId,
+    guesserId: roles.guesserId,
+    drawerIds: roles.drawerIds,
+    currentDrawerId: roles.currentDrawerId,
     strokes: [],
     startedAt: Date.now(),
     roundStartedAt: Date.now(),
