@@ -62,12 +62,18 @@ export const useRoomStore = defineStore('room', {
       this.error = error;
     },
     setRoom(room: Room | null) {
+      const previousRoomId = this.currentRoom?.id ?? null;
       this.currentRoom = room;
 
       const userId = useUserStore().currentUser?.id;
       const myMember = room?.members.find((member) => member.id === userId);
 
-      if (myMember?.isReady) {
+      if (
+        room === null ||
+        room.id !== previousRoomId ||
+        myMember === undefined ||
+        myMember.isReady
+      ) {
         this.hasSentReady = false;
       }
     },

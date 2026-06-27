@@ -11,6 +11,7 @@ import type {
 } from '@/types/api';
 
 let hasRegisteredListeners = false;
+let activeRegistrations = 0;
 const roundStartedHandlers = new Set<(event: RoundStartedEvent) => void>();
 const turnStartedHandlers = new Set<(event: TurnStartedEvent) => void>();
 const strokeHandlers = new Set<(stroke: Stroke) => void>();
@@ -18,48 +19,73 @@ const roundAnswerHandlers = new Set<(event: RoundAnswerEvent) => void>();
 const gameEndHandlers = new Set<(event: GameEndEvent) => void>();
 const clientDisconnectedHandlers = new Set<(event: ClientDisconnectedEvent) => void>();
 
+const handleRoundStarted = (event: RoundStartedEvent) => {
+  const gameStore = useGameStore();
+
+  gameStore.startRound(event);
+  roundStartedHandlers.forEach((handler) => {
+    handler(event);
+  });
+};
+
+const handleTurnStarted = (event: TurnStartedEvent) => {
+  const gameStore = useGameStore();
+
+  gameStore.startTurn(event);
+  turnStartedHandlers.forEach((handler) => {
+    handler(event);
+  });
+};
+
+const handleStroke = (stroke: Stroke) => {
+  const gameStore = useGameStore();
+
+  gameStore.addStroke(stroke);
+  strokeHandlers.forEach((handler) => {
+    handler(stroke);
+  });
+};
+
+const handleRoundAnswer = (event: RoundAnswerEvent) => {
+  const gameStore = useGameStore();
+
+  gameStore.showRoundAnswer(event);
+  roundAnswerHandlers.forEach((handler) => {
+    handler(event);
+  });
+};
+
+const handleGameEnd = (event: GameEndEvent) => {
+  const gameStore = useGameStore();
+
+  gameStore.endGame(event);
+  gameEndHandlers.forEach((handler) => {
+    handler(event);
+  });
+};
+
+const handleClientDisconnected = (event: ClientDisconnectedEvent) => {
+  const gameStore = useGameStore();
+
+  gameStore.abortByDisconnect(event);
+  clientDisconnectedHandlers.forEach((handler) => {
+    handler(event);
+  });
+};
+
 export const useGameSocket = () => {
   const gameStore = useGameStore();
   const socket = getSocket();
-
-  const handleRoundStarted = (event: RoundStartedEvent) => {
-    gameStore.startRound(event);
-    roundStartedHandlers.forEach((handler) => {
-      handler(event);
-    });
-  };
-  const handleTurnStarted = (event: TurnStartedEvent) => {
-    gameStore.startTurn(event);
-    turnStartedHandlers.forEach((handler) => {
-      handler(event);
-    });
-  };
-  const handleStroke = (stroke: Stroke) => {
-    gameStore.addStroke(stroke);
-    strokeHandlers.forEach((handler) => {
-      handler(stroke);
-    });
-  };
-  const handleRoundAnswer = (event: RoundAnswerEvent) => {
-    gameStore.showRoundAnswer(event);
-    roundAnswerHandlers.forEach((handler) => {
-      handler(event);
-    });
-  };
-  const handleGameEnd = (event: GameEndEvent) => {
-    gameStore.endGame(event);
-    gameEndHandlers.forEach((handler) => {
-      handler(event);
-    });
-  };
-  const handleClientDisconnected = (event: ClientDisconnectedEvent) => {
-    gameStore.abortByDisconnect(event);
-    clientDisconnectedHandlers.forEach((handler) => {
-      handler(event);
-    });
-  };
+  let isRegistered = false;
 
   const register = () => {
+    if (isRegistered) {
+      return;
+    }
+
+    activeRegistrations += 1;
+    isRegistered = true;
+
     if (hasRegisteredListeners) {
       return;
     }
@@ -74,6 +100,17 @@ export const useGameSocket = () => {
   };
 
   const cleanup = () => {
+    if (!isRegistered) {
+      return;
+    }
+
+    activeRegistrations = Math.max(activeRegistrations - 1, 0);
+    isRegistered = false;
+
+    if (activeRegistrations > 0) {
+      return;
+    }
+
     socket.off('round:started', handleRoundStarted);
     socket.off('turn:started', handleTurnStarted);
     socket.off('draw:stroke', handleStroke);

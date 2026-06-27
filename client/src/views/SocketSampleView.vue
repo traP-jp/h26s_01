@@ -207,6 +207,9 @@ onBeforeUnmount(() => {
   gameSocket.offRoundAnswer(logRoundAnswer);
   gameSocket.offGameEnd(logGameEnd);
   gameSocket.offClientDisconnected(logClientDisconnected);
+  lobbySocketEvents.cleanup();
+  roomSocket.cleanup();
+  gameSocket.cleanup();
 });
 </script>
 

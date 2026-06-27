@@ -18,6 +18,7 @@ import type {
 
 const port = Number.parseInt(process.env.MOCK_PORT ?? '3000', 10)
 const mockUserCookieName = 'mock_user_id'
+const maxStrokes = 9
 const mockRounds = [
   {
     kanji: '森',
@@ -158,6 +159,35 @@ const removeMember = (room: Room, userId: string) => {
   room.members = room.members.filter((member) => member.id !== userId)
 }
 
+const hasActiveSocketInRoom = (
+  roomId: string,
+  userId: string,
+  ignoredSocketId: string,
+) => {
+  for (const [socketId, activeUserId] of socketUserIds) {
+    if (socketId === ignoredSocketId || activeUserId !== userId) {
+      continue
+    }
+
+    if (socketRoomIds.get(socketId) === roomId) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const isFiniteStrokePayload = (payload: {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}) =>
+  Number.isFinite(payload.x1) &&
+  Number.isFinite(payload.y1) &&
+  Number.isFinite(payload.x2) &&
+  Number.isFinite(payload.y2)
+
 const getCurrentMockRound = (game: MockGameState) => mockRounds[game.roundIndex - 1]
 
 const emitRoundStarted = (room: Room, game: MockGameState) => {
@@ -176,6 +206,29 @@ const emitRoundStarted = (room: Room, game: MockGameState) => {
     turnIndex: game.turnIndex,
     drawerId: game.currentDrawerId,
   })
+}
+
+const emitTurnStarted = (room: Room, game: MockGameState) => {
+  io.to(room.id).emit('turn:started', {
+    turnIndex: game.turnIndex,
+    drawerId: game.currentDrawerId,
+  })
+}
+
+const advanceTurn = (room: Room, game: MockGameState) => {
+  if (game.strokes.length >= maxStrokes) {
+    return
+  }
+
+  game.turnIndex += 1
+  const nextDrawerId = game.drawerIds[(game.turnIndex - 1) % game.drawerIds.length]
+
+  if (nextDrawerId === undefined) {
+    return
+  }
+
+  game.currentDrawerId = nextDrawerId
+  emitTurnStarted(room, game)
 }
 
 const completeCurrentRound = (game: MockGameState) => {
@@ -390,8 +443,12 @@ io.on('connection', (socket) => {
     if (
       userId === undefined ||
       room === null ||
+      room.status !== 'playing' ||
       game === undefined ||
-      userId !== game.currentDrawerId
+      userId !== game.currentDrawerId ||
+      game.strokes.length >= maxStrokes ||
+      game.guesserAnswer !== null ||
+      !isFiniteStrokePayload(payload)
     ) {
       return
     }
@@ -406,6 +463,7 @@ io.on('connection', (socket) => {
 
     game.strokes.push(stroke)
     io.to(room.id).emit('draw:stroke', stroke)
+    advanceTurn(room, game)
   })
 
   socket.on('answer:submit', (payload) => {
@@ -417,8 +475,10 @@ io.on('connection', (socket) => {
     if (
       userId === undefined ||
       room === null ||
+      room.status !== 'playing' ||
       game === undefined ||
-      userId !== game.guesserId
+      userId !== game.guesserId ||
+      game.guesserAnswer !== null
     ) {
       return
     }
@@ -431,11 +491,19 @@ io.on('connection', (socket) => {
   })
 
   socket.on('round:end', () => {
+    const userId = socketUserIds.get(socket.id)
     const roomId = socketRoomIds.get(socket.id)
     const room = roomId === undefined ? null : findRoom(roomId)
     const game = roomId === undefined ? undefined : games.get(roomId)
 
-    if (room === null || game === undefined) {
+    if (
+      userId === undefined ||
+      room === null ||
+      room.status !== 'playing' ||
+      game === undefined ||
+      game.guesserAnswer === null ||
+      !room.members.some((member) => member.id === userId)
+    ) {
       return
     }
 
@@ -446,6 +514,16 @@ io.on('connection', (socket) => {
     const userId = socketUserIds.get(socket.id)
     const roomId = socketRoomIds.get(socket.id)
     const room = roomId === undefined ? null : findRoom(roomId)
+
+    if (
+      userId !== undefined &&
+      roomId !== undefined &&
+      hasActiveSocketInRoom(roomId, userId, socket.id)
+    ) {
+      socketUserIds.delete(socket.id)
+      socketRoomIds.delete(socket.id)
+      return
+    }
 
     if (userId !== undefined && room !== null && room.status === 'waiting') {
       removeMember(room, userId)

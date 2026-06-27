@@ -10,6 +10,7 @@ import type {
   TurnStartedEvent,
 } from '@/types/api';
 
+import { useRoomStore } from './room';
 import { useUserStore } from './user';
 
 export type GamePhase = 'idle' | 'playing' | 'roundResult' | 'ended' | 'aborted';
@@ -54,10 +55,14 @@ export const useGameStore = defineStore('game', {
       return this.currentUserId !== null && this.currentUserId === this.guesserId;
     },
     isDrawer(): boolean {
+      const currentUserId = this.currentUserId;
+      const isRoomMember = useRoomStore().members.some((member) => member.id === currentUserId);
+
       return (
-        this.currentUserId !== null &&
+        currentUserId !== null &&
         this.guesserId !== null &&
-        this.currentUserId !== this.guesserId
+        currentUserId !== this.guesserId &&
+        isRoomMember
       );
     },
     isMyTurn(): boolean {
