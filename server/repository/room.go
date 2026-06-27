@@ -34,8 +34,12 @@ func (r *Repository) ListRooms(ctx context.Context) ([]model.Room, error) {
 }
 
 func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId string) (model.Room, error) {
-	roomId := uuid.New()
-	_, err := r.db.ExecContext(ctx, "INSERT INTO rooms (id, name, status) VALUES (?, ?, ?)", roomId, roomName, "waiting")
+	roomId, err := uuid.NewV7()
+	if err != nil {
+		return model.Room{}, err
+	}
+
+	_, err = r.db.ExecContext(ctx, "INSERT INTO rooms (id, name, status) VALUES (?, ?, ?)", roomId, roomName, "waiting")
 	if err != nil {
 		return model.Room{}, err
 	}
@@ -46,14 +50,14 @@ func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId str
 	}
 
 	roomMember := model.RoomMember{
-			RoomID: roomId,
-			UserID: userId,
-	}	
+		RoomID: roomId,
+		UserID: userId,
+	}
 
 	room := model.Room{
-		ID: roomId,
-		Name: roomName,
-		Status: "waiting",
+		ID:      roomId,
+		Name:    roomName,
+		Status:  "waiting",
 		Members: []model.RoomMember{roomMember},
 	}
 
