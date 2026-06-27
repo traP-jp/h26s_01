@@ -4,17 +4,32 @@
  */
 
 export interface paths {
-  '/mock/status': {
+  '/api/me': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Check mock server status */
-    get: operations['getMockStatus'];
+    get: operations['getMe'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/rooms': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getRooms'];
+    put?: never;
+    post: operations['createRoom'];
     delete?: never;
     options?: never;
     head?: never;
@@ -25,13 +40,116 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    MockStatus: {
-      /** @constant */
-      status: 'ok';
-      /** @constant */
-      service: 'mock-server';
-      /** Format: date-time */
-      now: string;
+    User: {
+      /** @description traQ ID */
+      id: string;
+    };
+    RoomMember: components['schemas']['User'] & {
+      isReady: boolean;
+    };
+    Room: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      members: components['schemas']['RoomMember'][];
+      /** @enum {string} */
+      status: 'waiting' | 'playing';
+    };
+    CreateRoomRequest: {
+      name: string;
+    };
+    RoomJoinEvent: {
+      /** Format: uuid */
+      roomId: string;
+    };
+    DrawStrokeEvent: {
+      /** Format: double */
+      x1: number;
+      /** Format: double */
+      y1: number;
+      /** Format: double */
+      x2: number;
+      /** Format: double */
+      y2: number;
+    };
+    AnswerSubmitEvent: {
+      answer: string;
+    };
+    RoomListUpdatedEvent:
+      | components['schemas']['RoomCreatedEvent']
+      | components['schemas']['RoomUpdatedEvent']
+      | components['schemas']['RoomDeletedEvent'];
+    RoomCreatedEvent: {
+      /** @enum {string} */
+      eventType: 'room_created';
+      room: components['schemas']['Room'];
+    };
+    RoomUpdatedEvent: {
+      /** @enum {string} */
+      eventType: 'room_updated';
+      room: components['schemas']['Room'];
+    };
+    RoomDeletedEvent: {
+      /** @enum {string} */
+      eventType: 'room_deleted';
+      /** Format: uuid */
+      roomId: string;
+    };
+    RoundStartedEvent: {
+      /** @description 何文字目か（1-indexed） */
+      roundIndex: number;
+      /** @description GuesserのtraQ ID */
+      guesserId: string;
+      /** @description そのラウンドの漢字（Guesserには送られない） */
+      kanji?: string;
+    };
+    TurnStartedEvent: {
+      /** @description 何画目か（1-indexed） */
+      turnIndex: number;
+      /** @description そのターンに線を引くdrawerのtraQ ID */
+      drawerId: string;
+    };
+    ClientDisconnectedEvent: {
+      /** @description 切断したユーザーのtraQ ID */
+      userId: string;
+      /** @description 現在のdrawerが切断した場合、新しいdrawerのIDが含まれる。切断したのが最後の1人で、次のdrawerに指定できる人がいない場合は含まれない */
+      newDrawerId?: string;
+    };
+    RoundAnswerEvent: {
+      /** @description Guesserの回答 */
+      guesserAnswer: string;
+      /** @description 正しい答え */
+      actualAnswer: string;
+    };
+    GameEndEvent: {
+      /** @description クリアしたかどうか */
+      cleared: boolean;
+      /** @description かかった時間（ミリ秒） */
+      totalTimeMs: number;
+      /** @description 残っている残機の数 */
+      remainingLives: number;
+      rounds: components['schemas']['Round'][];
+    };
+    Round: {
+      /** Format: uuid */
+      id: string;
+      /** @description このラウンドにかかった時間（ミリ秒） */
+      timeMs: number;
+      guesserId: string;
+      guesserAnswer: string;
+      actualAnswer: string;
+      strokes: components['schemas']['Stroke'][];
+    };
+    Stroke: {
+      drawerId: string;
+      /** Format: double */
+      x1: number;
+      /** Format: double */
+      y1: number;
+      /** Format: double */
+      x2: number;
+      /** Format: double */
+      y2: number;
     };
   };
   responses: never;
@@ -42,7 +160,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  getMockStatus: {
+  getMe: {
     parameters: {
       query?: never;
       header?: never;
@@ -51,13 +169,57 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Mock server status */
+      /** @description 成功 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['MockStatus'];
+          'application/json': components['schemas']['User'];
+        };
+      };
+    };
+  };
+  getRooms: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 成功 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Room'][];
+        };
+      };
+    };
+  };
+  createRoom: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateRoomRequest'];
+      };
+    };
+    responses: {
+      /** @description 成功 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Room'];
         };
       };
     };

@@ -2,8 +2,11 @@
 import { io, type Socket } from 'socket.io-client';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { apiClient } from '@/api/client';
-
+type MockStatusResponse = {
+  status: 'ok';
+  service: 'mock-server';
+  now: string;
+};
 type MockPongPayload = {
   ok: boolean;
   sentAt: string;
@@ -20,13 +23,14 @@ async function checkRest() {
   restStatus.value = 'checking';
 
   try {
-    const { data, error } = await apiClient.GET('/mock/status');
+    const response = await fetch('/api/mock/status');
 
-    if (error) {
+    if (!response.ok) {
       restStatus.value = 'request failed';
       return;
     }
 
+    const data = (await response.json()) as MockStatusResponse;
     restStatus.value = `${data.status} (${data.service}, ${data.now})`;
   } catch (error) {
     restStatus.value = error instanceof Error ? error.message : 'request failed';
