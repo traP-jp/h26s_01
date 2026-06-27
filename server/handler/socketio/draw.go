@@ -3,6 +3,7 @@ package socketio
 import (
 	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/api"
+	"github.com/traP-jp/h26s_01/server/model"
 	"github.com/zishang520/socket.io/servers/socket/v3"
 )
 
@@ -25,7 +26,15 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		return err
 	}
 
-	if err = h.repo.SaveStroke(s.Request().Context(), turnId, event.X1, event.Y1, event.X2, event.Y2); err != nil {
+	stroke := model.Stroke{
+		TurnID: turnId,
+		X1:     event.X1,
+		Y1:     event.Y1,
+		X2:     event.X2,
+		Y2:     event.Y2,
+	}
+	
+	if err = h.repo.SaveStroke(s.Request().Context(), stroke); err != nil {
 		return err
 	}
 
