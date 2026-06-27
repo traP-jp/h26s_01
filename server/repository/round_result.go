@@ -12,15 +12,14 @@ func (r *Repository) SubmitAnswer(ctx context.Context, roundID uuid.UUID, curren
 	var roundResult model.RoundResult
 	roundResult.RoundID = roundID
 	roundResult.GuesserAnswer = answer
-	roundResult.TimeMs = uint32(currentTime.Unix())
 
-	var startTime uint32
+	var startTime time.Time
 	err := r.db.GetContext(ctx, &startTime, "SELECT started_at FROM rounds WHERE id = ?", roundID)
 	if err != nil {
 		return err
 	}
-	
-	timeMs := roundResult.TimeMs - startTime
+
+	timeMs := time.Since(startTime).Milliseconds()
 
 	if _, err := r.db.ExecContext(ctx, "INSERT INTO round_results (round_id, guesser_answer, time_ms) VALUES (?, ?, ?)", roundResult.RoundID, roundResult.GuesserAnswer, timeMs); err != nil {
 		return err

@@ -10,13 +10,9 @@ import (
 )
 
 func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubmitEvent) error {
-	user, err := h.getLoggedInUser(socket)
-	if err != nil {
-		return err
-	}
-
 	rooms := socket.Rooms()
 	myID := string(socket.Id())
+	var err error
 	var roomID uuid.UUID
 
 	if rooms != nil {
@@ -42,9 +38,9 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 	}
 	currentRoundUUID := currentRoundID.UUID
 
-	current_time := time.Now()
+	currentTime := time.Now()
 
-	if err := h.repo.SubmitAnswer(socket.Request().Context(), currentRoundUUID, current_time, event.Answer); err != nil {
+	if err := h.repo.SubmitAnswer(socket.Request().Context(), currentRoundUUID, currentTime, event.Answer); err != nil {
 		return err
 	}
 
