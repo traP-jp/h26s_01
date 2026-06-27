@@ -14,7 +14,7 @@ const props = withDefaults(
     :disabled="props.disabled"
     class="text-2xl px-12 py-2 border-4 border-primary transition"
     :class="{
-      'opacity-40 dark': props.disabled,
+      'opacity-40': props.disabled,
       'cursor-pointer': !props.disabled,
       'text-base bg-primary': props.variant == 'primary',
       'hover:text-primary hover:bg-base': props.variant == 'primary' && !props.disabled,
