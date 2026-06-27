@@ -4,3 +4,7 @@
 @theme {
   --font-serif: 'Sawarabi Mincho', serif;
 }
+
+body {
+    @apply font-serif
+}
