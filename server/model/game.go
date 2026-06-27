@@ -7,3 +7,9 @@ type Game struct {
 	CurrentRoundID uuid.NullUUID `db:"current_round_id"`
 	Kanjies        []string      `db:"-"`
 }
+
+type GameKanji struct {
+	ID        uuid.UUID `db:"id"`
+	GameID    uuid.UUID `db:"game_id"`
+	Character string    `db:"character"`
+}
