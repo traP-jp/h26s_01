@@ -85,4 +85,10 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 	socket.On("draw:stroke", createEventListenerForHandlersWithBody(socket, h.handleDrawStroke))
 	socket.On("answer:submit", createEventListenerForHandlersWithBody(socket, h.handleAnswerSubmit))
 	socket.On("round:end", createEventListenerForHandlersWithoutBody(socket, h.handleRoundEnd))
+
+	go func() {
+		if err := h.handleRoomListUpdated(socket); err != nil {
+			slog.Error("handling room list updated", "error", err)
+		}
+	}()
 }

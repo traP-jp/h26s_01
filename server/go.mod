@@ -5,6 +5,7 @@ go 1.26.0
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 require (
+	github.com/WillYingling/pubsub v0.0.0-20231109151540-60af269b467d
 	github.com/alecthomas/kong v1.15.0
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/google/uuid v1.6.0

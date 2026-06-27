@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/WillYingling/pubsub"
 	"github.com/labstack/echo/v5"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/traP-jp/h26s_01/server/api"
@@ -66,6 +67,18 @@ func (h *Handler) CreateRoom(c *echo.Context) error {
 		Members: roomMembers,
 		Status:  api.RoomStatus(room.Status),
 	}
+	roomCreatedEvent := api.RoomCreatedEvent{
+		EventType: api.RoomCreated,
+		Room:      response,
+	}
+
+	var roomListUpdatedEvent api.RoomListUpdatedEvent
+
+	if err := roomListUpdatedEvent.FromRoomCreatedEvent(roomCreatedEvent); err != nil {
+		return echo.ErrInternalServerError.Wrap(err)
+	}
+
+	pubsub.Publish(c.Request().Context(), roomListUpdatedEvent)
 
 	return c.JSON(http.StatusCreated, response)
 }
