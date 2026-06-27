@@ -32,15 +32,15 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 		return errors.New("roomID is empty")
 	}
 
-	currentRoundID, err := h.repo.GetRoundByRoomID(socket.Request().Context(), roomID.String())
+	currentRound, err := h.repo.GetCurrentRoundByRoomID(socket.Request().Context(), roomID.String())
 	if err != nil {
 		return err
 	}
-	currentRoundUUID := currentRoundID.UUID
+	currentRoundID := currentRound.ID
 
 	currentTime := time.Now()
 
-	if err := h.repo.SubmitAnswer(socket.Request().Context(), currentRoundUUID, currentTime, event.Answer); err != nil {
+	if err := h.repo.SubmitAnswer(socket.Request().Context(), currentRoundID, currentTime, event.Answer); err != nil {
 		return err
 	}
 

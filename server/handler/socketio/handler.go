@@ -85,6 +85,7 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 	socket.On("draw:stroke", createEventListenerForHandlersWithBody(socket, h.handleDrawStroke))
 	socket.On("answer:submit", createEventListenerForHandlersWithBody(socket, h.handleAnswerSubmit))
 	socket.On("round:end", createEventListenerForHandlersWithoutBody(socket, h.handleRoundEnd))
+	socket.On("client:disconnect", createEventListenerForHandlersWithoutBody(socket, h.handleClientDisconnect))
 
 	go func() {
 		if err := h.handleRoomListUpdated(socket); err != nil {
