@@ -17,3 +17,12 @@ func (r *Repository) GetCurrentRoundByRoomID(ctx context.Context, roomID uuid.UU
 
 	return round, nil
 }
+func (r *Repository) GetRoundByRoomID(ctx context.Context, roomID string) (uuid.NullUUID, error) {
+	var game model.Game
+	if err := r.db.GetContext(ctx, &game, "SELECT current_round_id FROM games WHERE room_id = ?", roomID); err != nil {
+		return uuid.NullUUID{}, err
+	}
+	currentRoundID := game.CurrentRoundID
+
+	return currentRoundID, nil
+}
