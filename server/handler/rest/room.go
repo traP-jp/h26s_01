@@ -2,10 +2,10 @@ package rest
 
 import "github.com/labstack/echo/v5"
 
-func (h *Handler) GetRooms(*echo.Context) error {
+func (h *Handler) GetRooms(c *echo.Context) error {
 	return nil
 }
 
-func (h *Handler) PostRoom(*echo.Context) error {
+func (h *Handler) PostRoom(c *echo.Context) error {
 	return nil
 }
