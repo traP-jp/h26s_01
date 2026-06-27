@@ -68,3 +68,30 @@ func (r *Repository) JoinRoom(ctx context.Context, roomId uuid.UUID, userId stri
 	_, err := r.db.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id) VALUES (?, ?)", roomId, userId)
 	return err
 }
+
+func (r *Repository) SetUserReady(ctx context.Context, roomId string, userId string) error {
+	_, err := r.db.ExecContext(ctx, "UPDATE room_members SET is_ready = true WHERE room_id = ? AND user_id = ?", roomId, userId)
+	return err
+}
+
+func (r *Repository) StartGame(ctx context.Context, roomId string) error {
+	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = 'playing' WHERE id = ?", roomId)
+	return err
+}
+
+func (r *Repository) GetRoom(ctx context.Context, roomId string) (model.Room, error) {
+	var room model.Room
+	var members []model.RoomMember
+
+	if err := r.db.GetContext(ctx, &room, "SELECT id, name, status FROM rooms WHERE id = ?", roomId); err != nil {
+		return model.Room{}, err
+	}
+
+	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready FROM room_members WHERE room_id = ?", roomId); err != nil {
+		return model.Room{}, err
+	}
+
+	room.Members = members
+
+	return room, nil
+}
