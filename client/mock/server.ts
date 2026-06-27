@@ -1,5 +1,7 @@
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import express from 'express'
 import { Server } from 'socket.io'
@@ -16,8 +18,11 @@ import type {
   User,
 } from './types'
 
-const port = Number.parseInt(process.env.MOCK_PORT ?? '3000', 10)
+const port = Number.parseInt(process.env.PORT ?? process.env.MOCK_PORT ?? '3000', 10)
+const staticDirectory = resolve(process.cwd(), process.env.MOCK_STATIC_DIR ?? 'dist')
+const staticIndexHtml = resolve(staticDirectory, 'index.html')
 const mockUserCookieName = 'mock_user_id'
+const mockCookieSecure = process.env.MOCK_COOKIE_SECURE === 'true'
 const maxStrokes = 9
 const mockRounds = [
   {
@@ -87,6 +92,7 @@ const getOrCreateMockUser = (
     httpOnly: true,
     path: '/',
     sameSite: 'lax',
+    secure: mockCookieSecure,
   })
 
   return {
@@ -403,6 +409,23 @@ app.post('/api/rooms', (request, response) => {
   response.status(201).json(room)
 })
 
+if (existsSync(staticIndexHtml)) {
+  app.use(express.static(staticDirectory))
+  app.use((request, response, next) => {
+    if (
+      request.method !== 'GET' ||
+      request.path.startsWith('/api') ||
+      request.path.startsWith('/socket.io') ||
+      !request.accepts('html')
+    ) {
+      next()
+      return
+    }
+
+    response.sendFile(staticIndexHtml)
+  })
+}
+
 io.on('connection', (socket) => {
   const user = getMockUserFromCookie(socket.handshake.headers.cookie)
 
@@ -577,4 +600,5 @@ io.on('connection', (socket) => {
 
 server.listen(port, () => {
   console.log(`mock server listening on http://localhost:${port}`)
+  console.log(`mock static directory: ${staticDirectory}`)
 })
