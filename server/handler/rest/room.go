@@ -1,9 +1,36 @@
 package rest
 
-import "github.com/labstack/echo/v5"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v5"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+	"github.com/traP-jp/h26s_01/server/api"
+)
 
 func (h *Handler) GetRooms(c *echo.Context) error {
-	return nil
+	rooms, err := h.repo.ListRooms(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	response := make([]api.Room, 0, len(rooms))
+	for _, room := range rooms {
+		roomMembers := make([]api.RoomMember, len(room.Members))
+		for i, member := range room.Members {
+			roomMembers[i] = api.RoomMember{
+				Id: member.UserID,
+			}
+		}
+		response = append(response, api.Room{
+			Id:      openapi_types.UUID(room.ID),
+			Name:    room.Name,
+			Members: roomMembers,
+			Status:  api.RoomStatus(room.Status),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) CreateRoom(c *echo.Context) error {
