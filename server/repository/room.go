@@ -9,7 +9,7 @@ import (
 func (r *Repository) ListRooms(ctx context.Context) ([]model.Room, error) {
 	var rooms []model.Room
 	var members []model.RoomMember
-	if err := r.db.SelectContext(ctx, &rooms, "SELECT id, name, status FROM rooms"); err != nil {
+	if err := r.db.SelectContext(ctx, &rooms, "SELECT id, name, status FROM rooms WHERE status = 'playing' OR status = 'waiting'"); err != nil {
 		return nil, err
 	}
 	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id FROM room_members"); err != nil {
