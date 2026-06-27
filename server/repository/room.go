@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/model"
 )
 
@@ -30,4 +31,35 @@ func (r *Repository) ListRooms(ctx context.Context) ([]model.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId string) (model.Room, error) {
+	roomId, err := uuid.NewV7()
+	if err != nil {
+		return model.Room{}, err
+	}
+
+	_, err = r.db.ExecContext(ctx, "INSERT INTO rooms (id, name, status) VALUES (?, ?, ?)", roomId, roomName, "waiting")
+	if err != nil {
+		return model.Room{}, err
+	}
+
+	_, err = r.db.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id) VALUES (?, ?)", roomId, userId)
+	if err != nil {
+		return model.Room{}, err
+	}
+
+	roomMember := model.RoomMember{
+		RoomID: roomId,
+		UserID: userId,
+	}
+
+	room := model.Room{
+		ID:      roomId,
+		Name:    roomName,
+		Status:  "waiting",
+		Members: []model.RoomMember{roomMember},
+	}
+
+	return room, nil
 }

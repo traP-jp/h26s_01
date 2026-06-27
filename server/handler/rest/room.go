@@ -35,5 +35,37 @@ func (h *Handler) GetRooms(c *echo.Context) error {
 }
 
 func (h *Handler) CreateRoom(c *echo.Context) error {
-	return nil
+	var body api.CreateRoomJSONRequestBody
+	if err := c.Bind(&body); err != nil {
+		return err
+	}
+	roomName := body.Name
+	if roomName == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "roomname is required")
+	}
+
+	user, err := h.getLoggedInUser(c)
+	if err != nil {
+		return err
+	}
+
+	room, err := h.repo.CreateRoom(c.Request().Context(), roomName, user.ID)
+	if err != nil {
+		return err
+	}
+
+	roomMembers := make([]api.RoomMember, len(room.Members))
+	for i, member := range room.Members {
+		roomMembers[i] = api.RoomMember{
+			Id: member.UserID,
+		}
+	}
+	response := api.Room{
+		Id:      openapi_types.UUID(room.ID),
+		Name:    room.Name,
+		Members: roomMembers,
+		Status:  api.RoomStatus(room.Status),
+	}
+
+	return c.JSON(http.StatusCreated, response)
 }
