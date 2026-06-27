@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import StrokeCanvas from '@/components/room/playing/StrokeCanvas.vue';
 import { useGameSocket } from '@/composables/useGameSocket';
 import { useLobby } from '@/composables/useLobby';
 import { useLobbySocketEvents } from '@/composables/useLobbySocketEvents';
@@ -10,6 +11,7 @@ import { useGameStore } from '@/stores/game';
 import { useRoomStore } from '@/stores/room';
 import type {
   ClientDisconnectedEvent,
+  DrawStrokeEvent,
   GameEndEvent,
   RoomListUpdatedEvent,
   RoomUpdatedEvent,
@@ -24,8 +26,11 @@ type EventLogItem = {
   text: string;
 };
 
+const MIN_STROKE_LENGTH = 0.01;
+
 const roomName = ref('sample room');
 const answer = ref('森');
+const draftStroke = ref<DrawStrokeEvent | null>(null);
 const eventLog = ref<EventLogItem[]>([]);
 let nextEventLogId = 1;
 
@@ -44,6 +49,20 @@ const isWaiting = computed(() => roomStore.currentRoom?.status === 'waiting');
 const isPlaying = computed(() => gameStore.phase === 'playing');
 const hasRoundResult = computed(() => gameStore.phase === 'roundResult');
 const hasGameEnded = computed(() => gameStore.phase === 'ended' || gameStore.phase === 'aborted');
+const draftStrokeLength = computed(() => {
+  if (draftStroke.value === null) {
+    return 0;
+  }
+
+  return Math.hypot(
+    draftStroke.value.x2 - draftStroke.value.x1,
+    draftStroke.value.y2 - draftStroke.value.y1,
+  );
+});
+const canSubmitDraftStroke = computed(
+  () =>
+    gameStore.canDraw && draftStroke.value !== null && draftStrokeLength.value >= MIN_STROKE_LENGTH,
+);
 const currentStep = computed(() => {
   if (hasGameEnded.value) {
     return 'Result';
@@ -171,6 +190,24 @@ const drawSampleStroke = () => {
     y2: 0.9,
   });
   log(didSend ? 'stroke requested' : 'stroke skipped');
+};
+
+const clearDraftStroke = () => {
+  draftStroke.value = null;
+};
+
+const submitDraftStroke = () => {
+  if (!canSubmitDraftStroke.value || draftStroke.value === null) {
+    log('canvas stroke skipped');
+    return;
+  }
+
+  const didSend = gameSocket.drawStroke(draftStroke.value);
+  log(didSend ? 'canvas stroke requested' : 'canvas stroke skipped');
+
+  if (didSend) {
+    draftStroke.value = null;
+  }
 };
 
 const submitSampleAnswer = () => {
@@ -374,7 +411,32 @@ onBeforeUnmount(() => {
             </dd>
           </dl>
 
+          <div class="mt-3 max-w-xl">
+            <StrokeCanvas
+              v-model:draft-stroke="draftStroke"
+              :can-draw="gameStore.canDraw"
+              :disabled="gameStore.phase !== 'playing'"
+              :strokes="gameStore.strokes"
+            />
+          </div>
+
           <div class="mt-3 flex flex-wrap items-end gap-2">
+            <button
+              type="button"
+              :disabled="draftStroke === null"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="clearDraftStroke"
+            >
+              書き直し
+            </button>
+            <button
+              type="button"
+              :disabled="!canSubmitDraftStroke"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="submitDraftStroke"
+            >
+              確定
+            </button>
             <button
               type="button"
               :disabled="!gameStore.canDraw"
