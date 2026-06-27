@@ -23,11 +23,10 @@ func (r *Repository) GetOrCreateUser(ctx context.Context, userID string) (*model
 		QueryRowContext(ctx, "SELECT id FROM users WHERE id = ?", userID).
 		Scan(&user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			if err = tx.
-				QueryRowContext(ctx, "INSERT INTO users (id) VALUES (?) RETURNING id", userID).
-				Scan(&user.ID); err != nil {
+			if _, err = tx.ExecContext(ctx, "INSERT INTO users (id) VALUES (?) ON DUPLICATE KEY UPDATE id = id", userID); err != nil {
 				return nil, err
 			}
+			user.ID = userID
 		} else {
 			return nil, err
 		}
