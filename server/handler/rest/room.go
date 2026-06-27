@@ -19,7 +19,8 @@ func (h *Handler) GetRooms(c *echo.Context) error {
 		roomMembers := make([]api.RoomMember, len(room.Members))
 		for i, member := range room.Members {
 			roomMembers[i] = api.RoomMember{
-				Id: member.UserID,
+				Id:      member.UserID,
+				IsReady: member.IsReady,
 			}
 		}
 		response = append(response, api.Room{

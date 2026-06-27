@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS rooms(
 CREATE TABLE IF NOT EXISTS room_members(
     room_id UUID NOT NULL,
     user_id VARCHAR(32) NOT NULL,
+	is_ready BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(room_id, user_id),
     FOREIGN KEY (room_id) REFERENCES rooms(id),
     FOREIGN KEY (user_id) REFERENCES users(id)

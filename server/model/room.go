@@ -10,6 +10,7 @@ type Room struct {
 }
 
 type RoomMember struct {
-	RoomID uuid.UUID `db:"room_id"`
-	UserID string    `db:"user_id"`
+	RoomID  uuid.UUID `db:"room_id"`
+	UserID  string    `db:"user_id"`
+	IsReady bool      `db:"is_ready"`
 }
