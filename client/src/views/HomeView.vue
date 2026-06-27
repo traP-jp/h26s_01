@@ -1,7 +1,14 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import Button from '@/components/common/BaseButton.vue';
+import Header from '@/components/common/TheHeader.vue';
+import CreateRoomSection from '@/components/home/CreateRoomSection.vue';
+import RoomListSection from '@/components/home/RoomListSection.vue';
+</script>
 
 <template>
-  <h1>h26s_01</h1>
+  <Header />
+  <RoomListSection />
+  <CreateRoomSection />
 </template>
 
 <style scoped></style>

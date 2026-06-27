@@ -9,4 +9,6 @@
 
 body {
   @apply font-serif;
+  @apply bg-background;
+  @apply text-primary;
 }

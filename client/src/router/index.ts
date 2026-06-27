@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+import PlayingRoomView from '@/components/room/playing/PlayingRoomView.vue';
 import HomeView from '@/views/HomeView.vue';
 import MockCheckView from '@/views/MockCheckView.vue';
 
@@ -15,6 +16,10 @@ const router = createRouter({
       path: '/mock-check',
       name: 'mock-check',
       component: MockCheckView,
+    },
+    {
+      path: '/mock-playing-room',
+      component: PlayingRoomView,
     },
   ],
 });
