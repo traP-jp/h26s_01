@@ -63,3 +63,8 @@ func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId str
 
 	return room, nil
 }
+
+func (r *Repository) JoinRoom(ctx context.Context, roomId uuid.UUID, userId string) error {
+	_, err := r.db.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id) VALUES (?, ?)", roomId, userId)
+	return err
+}
