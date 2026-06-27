@@ -13,6 +13,7 @@ require (
 	github.com/oapi-codegen/runtime v1.4.2
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/zishang520/socket.io/servers/socket/v3 v3.0.4
+	github.com/zishang520/socket.io/v3 v3.0.4
 )
 
 require (
@@ -49,7 +50,6 @@ require (
 	github.com/zishang520/socket.io/parsers/engine/v3 v3.0.4 // indirect
 	github.com/zishang520/socket.io/parsers/socket/v3 v3.0.4 // indirect
 	github.com/zishang520/socket.io/servers/engine/v3 v3.0.4 // indirect
-	github.com/zishang520/socket.io/v3 v3.0.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
