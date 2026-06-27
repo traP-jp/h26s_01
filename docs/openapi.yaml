@@ -17,7 +17,7 @@ paths:
     get:
       operationId: getRooms
       responses:
-        "201":
+        "200":
           description: 成功
           content:
             application/json:
@@ -34,7 +34,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateRoomRequest"
       responses:
-        "200":
+        "201":
           description: 成功
           content:
             application/json:
