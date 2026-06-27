@@ -1,0 +1,62 @@
+-- +goose Up
+
+CREATE TABLE IF NOT EXISTS users(
+    id VARCHAR(32) NOT NULL PRIMARY KEY,
+);
+
+CREATE TABLE IF NOT EXISTS rooms(
+    id UUID NOT NULL PRIMARY KEY,
+    name VARCHAR(64) NOT NULL,
+    status VARCHAR(16) NOT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS room_members(
+    room_id UUID NOT NULL FOREIGN KEY REFERENCES rooms(id),
+    user_id VARCHAR(32) NOT NULL FOREIGN KEY REFERENCES users(id),
+    PRIMARY KEY(room_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS games(
+    room_id UUID NOT NULL FOREIGN KEY REFERENCES rooms(id),
+    current_round_id UUID default NULL FOREIGN KEY REFERENCES rounds(id),
+    PRIMARY KEY(room_id)
+);
+
+CREATE TABLE IF NOT EXISTS game_kanjies(
+    id UUID NOT NULL PRIMARY KEY,
+    game_id UUID NOT NULL FOREIGN KEY REFERENCES games(room_id),
+    character VARCHAR(1) NOT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS rounds(
+    id UUID NOT NULL PRIMARY KEY,
+    game_id UUID NOT NULL FOREIGN KEY REFERENCES games(room_id),
+    round_index TINYINT UNSIGNED NOT NULL,
+    current_turn_id UUID default NULL FOREIGN KEY REFERENCES turns(id),
+    guesser_id VARCHAR(32) NOT NULL FOREIGN KEY REFERENCES users(id),
+    kanji_id UUID NOT NULL FOREIGN KEY REFERENCES game_kanjies(id),
+    started_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS turns(
+    id UUID NOT NULL PRIMARY KEY,
+    round_id UUID NOT NULL FOREIGN KEY REFERENCES rounds(id),
+    turn_index TINYINT UNSIGNED NOT NULL,
+    drawer_id VARCHAR(32) NOT NULL FOREIGN KEY REFERENCES users(id),
+);
+
+CREATE TABLE IF NOT EXISTS strokes(
+    id UUID NOT NULL PRIMARY KEY,
+    turn_id UUID NOT NULL FOREIGN KEY REFERENCES turns(id),
+    x1 DOUBLE UNSIGNED NOT NULL,
+    y1 DOUBLE UNSIGNED NOT NULL,
+    x2 DOUBLE UNSIGNED NOT NULL,
+    y2 DOUBLE UNSIGNED NOT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS round_results(
+    round_id UUID NOT NULL FOREIGN KEY REFERENCES rounds(id),
+    guesser_answer VARCHAR(1) NOT NULL,
+    time_ms INT UNSIGNED NOT NULL,
+    PRIMARY KEY(round_id)
+)
