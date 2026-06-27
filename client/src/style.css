@@ -3,6 +3,8 @@
 
 @theme {
   --font-serif: 'Sawarabi Mincho', serif;
+  --color-primary: #630909;
+  --color-background: #f8f6f0;
 }
 
 body {
