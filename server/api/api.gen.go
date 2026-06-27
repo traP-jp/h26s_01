@@ -81,8 +81,8 @@ type AnswerSubmitEvent struct {
 
 // ClientDisconnectedEvent defines model for ClientDisconnectedEvent.
 type ClientDisconnectedEvent struct {
-	// NewDrawerId undefined
-	NewDrawerId string `json:"newDrawerId"`
+	// NewDrawerId 現在のdrawerが切断した場合、新しいdrawerのIDが含まれる。切断したのが最後の1人で、次のdrawerに指定できる人がいない場合は含まれない
+	NewDrawerId *string `json:"newDrawerId,omitempty"`
 
 	// UserId 切断したユーザーのtraQ ID
 	UserId string `json:"userId"`
@@ -188,8 +188,8 @@ type RoundStartedEvent struct {
 	// GuesserId GuesserのtraQ ID
 	GuesserId string `json:"guesserId"`
 
-	// Kanji undefined
-	Kanji string `json:"kanji"`
+	// Kanji そのラウンドの漢字（Guesserには送られない）
+	Kanji *string `json:"kanji,omitempty"`
 
 	// RoundIndex 何文字目か（1-indexed）
 	RoundIndex int `json:"roundIndex"`

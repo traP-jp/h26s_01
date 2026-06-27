@@ -170,7 +170,6 @@ components:
       required:
         - roundIndex
         - guesserId
-        - kanji
       properties:
         roundIndex:
           type: integer
@@ -180,7 +179,7 @@ components:
           description: GuesserのtraQ ID
         kanji:
           type: string
-          description: undefined
+          description: そのラウンドの漢字（Guesserには送られない）
     TurnStartedEvent:
       type: object
       required:
@@ -197,14 +196,13 @@ components:
       type: object
       required:
         - userId
-        - newDrawerId
       properties:
         userId:
           type: string
           description: 切断したユーザーのtraQ ID
         newDrawerId:
           type: string
-          description: undefined
+          description: 現在のdrawerが切断した場合、新しいdrawerのIDが含まれる。切断したのが最後の1人で、次のdrawerに指定できる人がいない場合は含まれない
     RoundAnswerEvent:
       type: object
       required:
