@@ -6,6 +6,6 @@ func (h *Handler) GetRooms(c *echo.Context) error {
 	return nil
 }
 
-func (h *Handler) PostRoom(c *echo.Context) error {
+func (h *Handler) CreateRoom(c *echo.Context) error {
 	return nil
 }

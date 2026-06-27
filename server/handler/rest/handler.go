@@ -10,7 +10,7 @@ type Handler struct {
 	repo *repository.Repository
 }
 
-func New(repo *repository.Repository) *Handler {
+func NewHandler(repo *repository.Repository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
