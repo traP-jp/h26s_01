@@ -18,8 +18,16 @@ import type {
 
 const port = Number.parseInt(process.env.MOCK_PORT ?? '3000', 10)
 const mockUserCookieName = 'mock_user_id'
-const mockActualAnswer = '森'
-const mockKanji = '森'
+const mockRounds = [
+  {
+    kanji: '森',
+    actualAnswer: '森',
+  },
+  {
+    kanji: '箱',
+    actualAnswer: '箱',
+  },
+] as const
 
 const app = express()
 const server = createServer(app)
@@ -29,7 +37,6 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
   },
 })
 
-let nextMockUserIndex = 1
 const socketUserIds = new Map<string, string>()
 const socketRoomIds = new Map<string, string>()
 const games = new Map<string, MockGameState>()
@@ -66,11 +73,7 @@ const getCookieValue = (cookieHeader: string | undefined, name: string): string 
   return null
 }
 
-const createMockUserId = () => {
-  const userId = `mock-user-${nextMockUserIndex}`
-  nextMockUserIndex += 1
-  return userId
-}
+const createMockUserId = () => `mock-user-${randomUUID()}`
 
 const getOrCreateMockUser = (
   request: express.Request,
@@ -130,6 +133,79 @@ const emitRoomListUpdated = (room: Room) => {
   })
 }
 
+const emitRoomDeleted = (roomId: string) => {
+  io.emit('room_list:updated', {
+    eventType: 'room_deleted',
+    roomId,
+  })
+}
+
+const removeRoom = (roomId: string) => {
+  const roomIndex = rooms.findIndex((room) => room.id === roomId)
+
+  if (roomIndex !== -1) {
+    rooms.splice(roomIndex, 1)
+  }
+}
+
+const deleteRoom = (roomId: string) => {
+  games.delete(roomId)
+  removeRoom(roomId)
+  emitRoomDeleted(roomId)
+}
+
+const removeMember = (room: Room, userId: string) => {
+  room.members = room.members.filter((member) => member.id !== userId)
+}
+
+const getCurrentMockRound = (game: MockGameState) => mockRounds[game.roundIndex - 1]
+
+const emitRoundStarted = (room: Room, game: MockGameState) => {
+  const mockRound = getCurrentMockRound(game)
+
+  if (mockRound === undefined) {
+    return
+  }
+
+  io.to(room.id).emit('round:started', {
+    roundIndex: game.roundIndex,
+    guesserId: game.guesserId,
+    kanji: mockRound.kanji,
+  })
+  io.to(room.id).emit('turn:started', {
+    turnIndex: game.turnIndex,
+    drawerId: game.currentDrawerId,
+  })
+}
+
+const completeCurrentRound = (game: MockGameState) => {
+  game.completedRounds.push({
+    id: randomUUID(),
+    timeMs: Date.now() - game.roundStartedAt,
+    guesserId: game.guesserId,
+    guesserAnswer: game.guesserAnswer ?? '',
+    actualAnswer: game.actualAnswer,
+    strokes: game.strokes,
+  })
+}
+
+const startNextRound = (room: Room, game: MockGameState) => {
+  const nextMockRound = mockRounds[game.roundIndex]
+
+  if (nextMockRound === undefined) {
+    return false
+  }
+
+  game.roundIndex += 1
+  game.turnIndex = 1
+  game.strokes = []
+  game.roundStartedAt = Date.now()
+  game.guesserAnswer = null
+  game.actualAnswer = nextMockRound.actualAnswer
+  emitRoundStarted(room, game)
+  return true
+}
+
 const startGameIfReady = (room: Room) => {
   if (
     room.status !== 'waiting' ||
@@ -155,6 +231,7 @@ const startGameIfReady = (room: Room) => {
   }
 
   room.status = 'playing'
+  const firstMockRound = mockRounds[0]
   const game: MockGameState = {
     roomId: room.id,
     roundIndex: 1,
@@ -164,22 +241,16 @@ const startGameIfReady = (room: Room) => {
     currentDrawerId,
     strokes: [],
     startedAt: Date.now(),
+    roundStartedAt: Date.now(),
     guesserAnswer: null,
-    actualAnswer: mockActualAnswer,
+    actualAnswer: firstMockRound.actualAnswer,
+    completedRounds: [],
   }
 
   games.set(room.id, game)
   emitRoomUpdated(room)
   emitRoomListUpdated(room)
-  io.to(room.id).emit('round:started', {
-    roundIndex: game.roundIndex,
-    guesserId: game.guesserId,
-    kanji: mockKanji,
-  })
-  io.to(room.id).emit('turn:started', {
-    turnIndex: game.turnIndex,
-    drawerId: game.currentDrawerId,
-  })
+  emitRoundStarted(room, game)
 }
 
 const endGame = (room: Room, game: MockGameState) => {
@@ -189,19 +260,20 @@ const endGame = (room: Room, game: MockGameState) => {
     cleared: true,
     totalTimeMs,
     remainingLives: 1,
-    rounds: [
-      {
-        id: randomUUID(),
-        timeMs: totalTimeMs,
-        guesserId: game.guesserId,
-        guesserAnswer: game.guesserAnswer ?? '',
-        actualAnswer: game.actualAnswer,
-        strokes: game.strokes,
-      },
-    ],
+    rounds: game.completedRounds,
   })
 
-  games.delete(room.id)
+  deleteRoom(room.id)
+}
+
+const endRound = (room: Room, game: MockGameState) => {
+  completeCurrentRound(game)
+
+  if (startNextRound(room, game)) {
+    return
+  }
+
+  endGame(room, game)
 }
 
 app.get('/api/mock/status', (_request, response) => {
@@ -367,7 +439,7 @@ io.on('connection', (socket) => {
       return
     }
 
-    endGame(room, game)
+    endRound(room, game)
   })
 
   socket.on('disconnect', () => {
@@ -375,11 +447,25 @@ io.on('connection', (socket) => {
     const roomId = socketRoomIds.get(socket.id)
     const room = roomId === undefined ? null : findRoom(roomId)
 
-    if (userId !== undefined && room !== null && room.status === 'playing') {
+    if (userId !== undefined && room !== null && room.status === 'waiting') {
+      removeMember(room, userId)
+
+      if (room.members.length === 0) {
+        deleteRoom(room.id)
+      } else {
+        emitRoomUpdated(room)
+        emitRoomListUpdated(room)
+      }
+    } else if (
+      userId !== undefined &&
+      room !== null &&
+      room.status === 'playing' &&
+      games.has(room.id)
+    ) {
       io.to(room.id).emit('client:disconnected', {
         userId,
       })
-      games.delete(room.id)
+      deleteRoom(room.id)
     }
 
     socketUserIds.delete(socket.id)

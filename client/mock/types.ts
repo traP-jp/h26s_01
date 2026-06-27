@@ -39,8 +39,10 @@ export type MockGameState = {
   currentDrawerId: string
   strokes: Stroke[]
   startedAt: number
+  roundStartedAt: number
   guesserAnswer: string | null
   actualAnswer: string
+  completedRounds: GameEndEvent['rounds']
 }
 
 export type ClientToServerEvents = {
