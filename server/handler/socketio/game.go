@@ -2,6 +2,7 @@ package socketio
 
 import (
 	"context"
+	"errors"
 
 	"github.com/zishang520/socket.io/servers/socket/v3"
 )
@@ -25,27 +26,18 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		}
 	}
 	if roomID == "" {
-		return nil
+		return errors.New("roomID is empty")
 	}
 
 	if err := h.repo.SetUserReady(s.Request().Context(), roomID, user.ID); err != nil {
 		return err
 	}
 
-	h.io.To(socket.Room(roomID)).Emit("game_ready", map[string]any{
-		"user_id":  user.ID,
-		"is_ready": true,
-	})
-
 	if h.isAllUsersReady(s.Request().Context(), roomID) {
 		err := h.repo.StartGame(s.Request().Context(), roomID)
 		if err != nil {
 			return err
 		}
-		h.io.To(socket.Room(roomID)).Emit("game_start", map[string]any{
-			"status":  "playing",
-			"room_id": roomID,
-		})
 	}
 
 	return nil
