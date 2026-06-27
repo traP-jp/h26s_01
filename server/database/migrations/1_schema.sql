@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS room_members(
 
 CREATE TABLE IF NOT EXISTS games(
     room_id UUID NOT NULL FOREIGN KEY REFERENCES rooms(id),
-    current_round_id UUID default NULL FOREIGN KEY REFERENCES rounds(id),
+    current_round_id UUID DEFAULT NULL FOREIGN KEY REFERENCES rounds(id),
     PRIMARY KEY(room_id)
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS rounds(
     id UUID NOT NULL PRIMARY KEY,
     game_id UUID NOT NULL FOREIGN KEY REFERENCES games(room_id),
     round_index TINYINT UNSIGNED NOT NULL,
-    current_turn_id UUID default NULL FOREIGN KEY REFERENCES turns(id),
+    current_turn_id UUID DEFAULT NULL FOREIGN KEY REFERENCES turns(id),
     guesser_id VARCHAR(32) NOT NULL FOREIGN KEY REFERENCES users(id),
     kanji_id UUID NOT NULL FOREIGN KEY REFERENCES game_kanjies(id),
     started_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL,
