@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --font-serif: 'Sawarabi Mincho', serif;
 }
 
 body {
-    @apply font-serif
+  @apply font-serif;
 }
