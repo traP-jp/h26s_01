@@ -117,7 +117,7 @@ type GameEndEvent struct {
 // Room defines model for Room.
 type Room struct {
 	Id      openapi_types.UUID `json:"id"`
-	Members []User             `json:"members"`
+	Members []RoomMember       `json:"members"`
 	Name    string             `json:"name"`
 	Status  RoomStatus         `json:"status"`
 }
@@ -151,6 +151,13 @@ type RoomJoinEvent struct {
 // RoomListUpdatedEvent defines model for RoomListUpdatedEvent.
 type RoomListUpdatedEvent struct {
 	union json.RawMessage
+}
+
+// RoomMember defines model for RoomMember.
+type RoomMember struct {
+	// Id traQ ID
+	Id      string `json:"id"`
+	IsReady bool   `json:"isReady"`
 }
 
 // RoomUpdatedEvent defines model for RoomUpdatedEvent.

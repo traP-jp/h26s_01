@@ -50,6 +50,16 @@ components:
         id:
           type: string
           description: traQ ID
+    RoomMember:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required:
+            - isReady
+          properties:
+            isReady:
+              type: boolean
     Room:
       type: object
       required:
@@ -66,7 +76,7 @@ components:
         members:
           type: array
           items:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/RoomMember"
         status:
           type: string
           enum:
