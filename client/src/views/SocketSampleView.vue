@@ -214,127 +214,216 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section>
-    <h1>Socket Sample</h1>
-    <p>Current step: {{ currentStep }}</p>
+  <section class="min-h-screen bg-background px-8 py-6 text-primary">
+    <div class="mx-auto max-w-5xl space-y-5">
+      <div class="space-y-1 border-b border-primary pb-3">
+        <h1 class="text-3xl leading-tight">Socket Sample</h1>
+        <p class="text-sm">
+          Current step: <span class="font-bold">{{ currentStep }}</span>
+          <span class="ml-3">mock socket と store の状態遷移確認用ページ</span>
+        </p>
+      </div>
 
-    <section>
-      <h2>1. Session</h2>
-      <dl>
-        <dt>User</dt>
-        <dd>{{ userStore.currentUser?.id ?? 'not loaded' }}</dd>
+      <div class="space-y-4">
+        <section class="border border-primary p-4">
+          <h2 class="mb-3 text-xl">1. Session</h2>
+          <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
+            <dt class="text-sm opacity-70">User</dt>
+            <dd class="break-all">{{ userStore.currentUser?.id ?? 'not loaded' }}</dd>
 
-        <dt>Socket</dt>
-        <dd>
-          {{ socketConnection.isConnected ? 'connected' : 'disconnected' }}
-          <span v-if="socketConnection.connectionError">
-            ({{ socketConnection.connectionError }})
-          </span>
-        </dd>
-      </dl>
-      <button type="button" @click="initialize">Initialize</button>
-    </section>
+            <dt class="text-sm opacity-70">Socket</dt>
+            <dd>
+              <span class="font-bold">
+                {{ socketConnection.isConnected ? 'connected' : 'disconnected' }}
+              </span>
+              <span v-if="socketConnection.connectionError">
+                ({{ socketConnection.connectionError }})
+              </span>
+            </dd>
+          </dl>
+          <button
+            type="button"
+            class="mt-3 border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background"
+            @click="initialize"
+          >
+            Initialize
+          </button>
+        </section>
 
-    <section>
-      <h2>2. Lobby</h2>
-      <p v-if="hasJoinedRoom">
-        You are already in a room. The current API has no room leave event, so joining another room
-        is disabled in this sample.
-      </p>
-      <label>
-        Room name
-        <input v-model="roomName" type="text" />
-      </label>
-      <button type="button" @click="refreshRooms">Refresh rooms</button>
-      <button type="button" :disabled="hasJoinedRoom" @click="createAndJoinRoom">
-        Create and join
-      </button>
+        <section class="border border-primary p-4">
+          <h2 class="mb-3 text-xl">2. Lobby</h2>
+          <p v-if="hasJoinedRoom" class="mb-3 text-sm">
+            You are already in a room. The current API has no room leave event, so joining another
+            room is disabled in this sample.
+          </p>
+          <div class="flex flex-wrap items-end gap-2">
+            <label class="flex min-w-64 flex-col gap-1 text-sm">
+              Room name
+              <input
+                v-model="roomName"
+                type="text"
+                class="border border-primary bg-background px-2 py-1 text-sm outline-none focus:bg-white"
+              />
+            </label>
+            <button
+              type="button"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background"
+              @click="refreshRooms"
+            >
+              Refresh rooms
+            </button>
+            <button
+              type="button"
+              :disabled="hasJoinedRoom"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="createAndJoinRoom"
+            >
+              Create and join
+            </button>
+          </div>
 
-      <ul>
-        <li v-for="room in lobbyStore.rooms" :key="room.id">
-          <button type="button" :disabled="hasJoinedRoom" @click="joinRoom(room.id)">Join</button>
-          {{ room.name }} / {{ room.status }} / {{ room.members.length }} members
-        </li>
-      </ul>
-    </section>
+          <ul class="mt-3 space-y-1">
+            <li
+              v-for="room in lobbyStore.rooms"
+              :key="room.id"
+              class="flex flex-wrap items-center gap-2 text-sm"
+            >
+              <button
+                type="button"
+                :disabled="hasJoinedRoom"
+                class="border border-primary px-2 py-0.5 text-xs hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+                @click="joinRoom(room.id)"
+              >
+                Join
+              </button>
+              <span class="text-base">{{ room.name }}</span>
+              <span class="opacity-70">{{ room.status }} / {{ room.members.length }} members</span>
+            </li>
+          </ul>
+        </section>
 
-    <section>
-      <h2>3. Waiting room</h2>
-      <dl>
-        <dt>Current room</dt>
-        <dd>{{ roomStore.currentRoom?.name ?? 'not joined' }}</dd>
+        <section class="border border-primary p-4">
+          <h2 class="mb-3 text-xl">3. Waiting room</h2>
+          <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
+            <dt class="text-sm opacity-70">Current room</dt>
+            <dd>{{ roomStore.currentRoom?.name ?? 'not joined' }}</dd>
 
-        <dt>Members</dt>
-        <dd>
-          <span v-for="member in roomStore.members" :key="member.id">
-            {{ member.id }}{{ member.isReady ? ' ready' : '' }}
-          </span>
-        </dd>
-      </dl>
-      <button type="button" :disabled="hasJoinedRoom" @click="joinSelectedRoom">
-        Join first room
-      </button>
-      <button type="button" :disabled="!isWaiting || roomStore.isReady" @click="sendReady">
-        Ready
-      </button>
-      <p>Room leave is not implemented because the current API has no leave event.</p>
-      <p>
-        In the mock server, closing the tab while waiting removes that member from the room. Closing
-        the tab while playing aborts the game for the remaining clients.
-      </p>
-    </section>
+            <dt class="text-sm opacity-70">Members</dt>
+            <dd class="flex flex-wrap gap-2">
+              <span
+                v-for="member in roomStore.members"
+                :key="member.id"
+                class="border border-primary/40 px-2 py-0.5 text-xs"
+              >
+                {{ member.id }}{{ member.isReady ? ' ready' : '' }}
+              </span>
+            </dd>
+          </dl>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              :disabled="hasJoinedRoom"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="joinSelectedRoom"
+            >
+              Join first room
+            </button>
+            <button
+              type="button"
+              :disabled="!isWaiting || roomStore.isReady"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="sendReady"
+            >
+              Ready
+            </button>
+          </div>
+          <div class="mt-3 space-y-1 text-sm opacity-80">
+            <p>Room leave is not implemented because the current API has no leave event.</p>
+            <p>
+              In the mock server, closing the tab while waiting removes that member from the room.
+              Closing the tab while playing aborts the game for the remaining clients.
+            </p>
+          </div>
+        </section>
 
-    <section>
-      <h2>4. Game</h2>
-      <dl>
-        <dt>Phase</dt>
-        <dd>{{ gameStore.phase }}</dd>
+        <section class="border border-primary p-4">
+          <h2 class="mb-3 text-xl">4. Game</h2>
+          <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
+            <dt class="text-sm opacity-70">Phase</dt>
+            <dd>{{ gameStore.phase }}</dd>
 
-        <dt>Round</dt>
-        <dd>{{ gameStore.roundLabel || '-' }}</dd>
+            <dt class="text-sm opacity-70">Round</dt>
+            <dd>{{ gameStore.roundLabel || '-' }}</dd>
 
-        <dt>Turn</dt>
-        <dd>{{ gameStore.turnLabel || '-' }}</dd>
+            <dt class="text-sm opacity-70">Turn</dt>
+            <dd>{{ gameStore.turnLabel || '-' }}</dd>
 
-        <dt>Role</dt>
-        <dd>
-          guesser: {{ gameStore.isGuesser }} / drawer: {{ gameStore.isDrawer }} / my turn:
-          {{ gameStore.isMyTurn }}
-        </dd>
+            <dt class="text-sm opacity-70">Role</dt>
+            <dd>
+              guesser: {{ gameStore.isGuesser }} / drawer: {{ gameStore.isDrawer }} / my turn:
+              {{ gameStore.isMyTurn }}
+            </dd>
 
-        <dt>Strokes</dt>
-        <dd>{{ gameStore.strokeCount }}</dd>
+            <dt class="text-sm opacity-70">Strokes</dt>
+            <dd>{{ gameStore.strokeCount }}</dd>
 
-        <dt>Round answer</dt>
-        <dd>
-          {{ gameStore.roundAnswer?.guesserAnswer ?? '-' }} /
-          {{ gameStore.roundAnswer?.actualAnswer ?? '-' }}
-        </dd>
-      </dl>
+            <dt class="text-sm opacity-70">Round answer</dt>
+            <dd>
+              {{ gameStore.roundAnswer?.guesserAnswer ?? '-' }} /
+              {{ gameStore.roundAnswer?.actualAnswer ?? '-' }}
+            </dd>
+          </dl>
 
-      <button type="button" :disabled="!gameStore.canDraw" @click="drawSampleStroke">
-        Draw sample stroke
-      </button>
-      <label>
-        Answer
-        <input v-model="answer" type="text" />
-      </label>
-      <button type="button" :disabled="!gameStore.canSubmitAnswer" @click="submitSampleAnswer">
-        Submit answer
-      </button>
-      <button type="button" :disabled="!hasRoundResult" @click="endRound">End round</button>
-      <p>
-        The mock game runs two fixed rounds, 森 then 箱. The first round end starts the next round,
-        and the second round end sends game:end.
-      </p>
-    </section>
+          <div class="mt-3 flex flex-wrap items-end gap-2">
+            <button
+              type="button"
+              :disabled="!gameStore.canDraw"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="drawSampleStroke"
+            >
+              Draw sample stroke
+            </button>
+            <label class="flex min-w-40 flex-col gap-1 text-sm">
+              Answer
+              <input
+                v-model="answer"
+                type="text"
+                class="border border-primary bg-background px-2 py-1 text-sm outline-none focus:bg-white"
+              />
+            </label>
+            <button
+              type="button"
+              :disabled="!gameStore.canSubmitAnswer"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="submitSampleAnswer"
+            >
+              Submit answer
+            </button>
+            <button
+              type="button"
+              :disabled="!hasRoundResult"
+              class="border border-primary px-3 py-1 text-sm hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-primary"
+              @click="endRound"
+            >
+              End round
+            </button>
+          </div>
+          <p class="mt-3 text-sm opacity-80">
+            The mock game runs two fixed rounds, 森 then 箱. The first round end starts the next
+            round, and the second round end sends game:end.
+          </p>
+        </section>
 
-    <section>
-      <h2>5. Event log</h2>
-      <ol>
-        <li v-for="item in latestEventLog" :key="item.id">{{ item.text }}</li>
-      </ol>
-    </section>
+        <section class="border border-primary p-4">
+          <h2 class="mb-3 text-xl">5. Event log</h2>
+          <ol class="max-h-80 space-y-1 overflow-y-auto text-sm">
+            <li v-for="item in latestEventLog" :key="item.id">
+              {{ item.text }}
+            </li>
+          </ol>
+        </section>
+      </div>
+    </div>
   </section>
 </template>
 
