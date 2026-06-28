@@ -115,9 +115,9 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 	}
 
 	kanjiesID, err := h.repo.GetKanjiesOrderByOrder(s.Request().Context(), roomUUID)
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
 	currentRound, err := h.repo.GetCurrentRoundByRoomID(s.Request().Context(), roomUUID)
 	if err == nil {
@@ -164,10 +164,10 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 				}
 			}
 		}
-	}else {
-		if !errors.Is(err,sql.ErrNoRows){
+	} else {
+		if !errors.Is(err, sql.ErrNoRows) {
 			return err
-		}else{
+		} else {
 			round.RoundIndex = 1
 			if len(members) > 0 {
 				round.GuesserID = members[0].UserID
