@@ -233,6 +233,11 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 	}
 	slog.Info("Round created", "roundID", round.ID)
 
+	if err := h.repo.UpdateGameCurrentRound(context.Background(), round.GameID, round.ID); err != nil {
+		return err
+	}
+	slog.Info("Game current_round_id updated", "gameID", round.GameID, "roundID", round.ID)
+
 	kanji, err := h.repo.GetKanji(context.Background(), round.KanjiID)
 	if err != nil {
 		return err

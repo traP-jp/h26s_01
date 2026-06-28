@@ -68,6 +68,11 @@ func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID uuid.UUID) (int
 	return totalTime, nil
 }
 
+func (r *Repository) UpdateGameCurrentRound(ctx context.Context, gameID uuid.UUID, roundID uuid.UUID) error {
+	_, err := r.db.ExecContext(ctx, "UPDATE games SET current_round_id = ? WHERE id = ?", roundID, gameID)
+	return err
+}
+
 func (r *Repository) GetAllRounds(ctx context.Context, roomID uuid.UUID) ([]model.RoundWithResult, error) {
 	var rounds []model.Round
 	if err := r.db.SelectContext(ctx, &rounds, "SELECT * FROM rounds WHERE game_id = ?", roomID); err != nil {
