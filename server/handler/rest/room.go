@@ -78,7 +78,7 @@ func (h *Handler) CreateRoom(c *echo.Context) error {
 		return echo.ErrInternalServerError.Wrap(err)
 	}
 
-	pubsub.Publish(c.Request().Context(), roomListUpdatedEvent)
+	pubsub.Publish(c.Request().Context(), &roomListUpdatedEvent)
 
 	return c.JSON(http.StatusCreated, response)
 }

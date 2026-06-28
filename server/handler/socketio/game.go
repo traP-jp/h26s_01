@@ -37,11 +37,11 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		return errors.New("roomID is empty")
 	}
 
-	if err := h.repo.SetUserReady(s.Request().Context(), roomID, user.ID); err != nil {
+	if err := h.repo.SetUserReady(context.Background(), roomID, user.ID); err != nil {
 		return err
 	}
 
-	room, err := h.repo.GetRoom(s.Request().Context(), roomID)
+	room, err := h.repo.GetRoom(context.Background(), roomID)
 
 	if err != nil {
 		return err
@@ -59,14 +59,15 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		return err
 	}
 
-	pubsub.Publish(s.Request().Context(), roomListUpdatedEvent)
-	pubsub.Publish(s.Request().Context(), roomUpdatedEvent)
+	pubsub.Publish(context.Background(), &roomListUpdatedEvent)
+	pubsub.Publish(context.Background(), &roomUpdatedEvent)
 
-	if h.isAllUsersReady(s.Request().Context(), roomID) {
-		err := h.repo.StartGame(s.Request().Context(), roomID)
+	if h.isAllUsersReady(context.Background(), roomID) {
+		err := h.repo.StartGame(context.Background(), roomID, len(room.Members))
 		if err != nil {
 			return err
 		}
+		h.handleRoundStarted(s, roomID)
 	}
 
 	return nil

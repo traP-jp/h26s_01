@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS room_members(
     room_id UUID NOT NULL,
     user_id VARCHAR(32) NOT NULL,
 	is_ready BOOLEAN NOT NULL DEFAULT FALSE,
+    guesser_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    is_connected BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY(room_id, user_id),
     FOREIGN KEY (room_id) REFERENCES rooms(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -28,7 +30,8 @@ CREATE TABLE IF NOT EXISTS games(
 CREATE TABLE IF NOT EXISTS game_kanjies(
     id UUID NOT NULL PRIMARY KEY,
     game_id UUID NOT NULL,
-    character VARCHAR(1) NOT NULL,
+    `character` VARCHAR(1) NOT NULL,
+    kanji_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
     FOREIGN KEY (game_id) REFERENCES games(room_id)
 );
 

@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -28,6 +29,25 @@ func NewHandler(repo *repository.Repository) *Handler {
 }
 
 func (h *Handler) Start() (err error) {
+	h.io.Use(func(soc *socket.Socket, next func(*socket.ExtendedError)) {
+		// Directly access the underlying HTTP request headers
+		userID := soc.Client().Request().Request().Header.Get("X-Forwarded-User")
+
+		if userID == "" {
+			next(socket.NewExtendedError("unauthorized: X-Forwarded-User header not found", nil))
+			return
+		}
+
+		user, err := h.repo.GetOrCreateUser(context.Background(), userID)
+		if err != nil {
+			next(socket.NewExtendedError("failed to get or create user", err.Error()))
+			return
+		}
+
+		soc.SetData(user)
+		next(nil)
+	})
+
 	return h.io.On("connection", func(args ...any) {
 		socket, ok := args[0].(*socket.Socket)
 
@@ -42,9 +62,10 @@ func (h *Handler) Start() (err error) {
 }
 
 func (h *Handler) getLoggedInUser(socket *socket.Socket) (*model.User, error) {
-	userID := socket.Handshake().Headers.Header().Get("X-Forwarded-User")
+	// Directly access the underlying HTTP request headers
+	userID := socket.Client().Request().Request().Header.Get("X-Forwarded-User")
 
-	return h.repo.GetOrCreateUser(socket.Request().Context(), userID)
+	return h.repo.GetOrCreateUser(context.Background(), userID)
 }
 
 func createEventListenerForHandlersWithoutBody(socket *socket.Socket, handler func(socket *socket.Socket) error) func(args ...any) {
@@ -57,12 +78,21 @@ func createEventListenerForHandlersWithoutBody(socket *socket.Socket, handler fu
 
 func createEventListenerForHandlersWithBody[T any](socket *socket.Socket, handler func(socket *socket.Socket, event T) error) func(args ...any) {
 	return func(args ...any) {
-		bodyBytes, ok := args[0].([]byte)
+		var bodyBytes []byte
+		var err error
 
-		if !ok {
-			slog.Error("bodyBytes assertion failed")
+		switch arg := args[0].(type) {
+		case []byte:
+			bodyBytes = arg
+		case string:
+			bodyBytes = []byte(arg)
+		default:
+			bodyBytes, err = json.Marshal(arg)
+			if err != nil {
+				slog.Error("marshaling event body", "error", err)
 
-			return
+				return
+			}
 		}
 
 		var event T
@@ -85,6 +115,7 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 	socket.On("draw:stroke", createEventListenerForHandlersWithBody(socket, h.handleDrawStroke))
 	socket.On("answer:submit", createEventListenerForHandlersWithBody(socket, h.handleAnswerSubmit))
 	socket.On("round:end", createEventListenerForHandlersWithoutBody(socket, h.handleRoundEnd))
+	socket.On("client:disconnect", createEventListenerForHandlersWithoutBody(socket, h.handleClientDisconnect))
 
 	go func() {
 		if err := h.handleRoomListUpdated(socket); err != nil {
@@ -94,6 +125,21 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 	go func() {
 		if err := h.roomUpdatedEventHandler(socket); err != nil {
 			slog.Error("handling room updated", "error", err)
+		}
+	}()
+	go func() {
+		if err := h.handleRoundAnswer(socket); err != nil {
+			slog.Error("handling round answer", "error", err)
+		}
+	}()
+	go func() {
+		if err := h.handleRoundStartedEvent(socket); err != nil {
+			slog.Error("handling round started", "error", err)
+		}
+	}()
+	go func() {
+		if err := h.handleTurnStartedEvent(socket); err != nil {
+			slog.Error("handling turn started", "error", err)
 		}
 	}()
 }

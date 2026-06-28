@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/WillYingling/pubsub"
@@ -9,8 +10,8 @@ import (
 )
 
 func (h *Handler) handleRoomListUpdated(socket *socket.Socket) error {
-	ctx := socket.Request().Context()
-	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoomListUpdatedEvent](ctx)
+	ctx := context.Background()
+	eventCh, unsubscribe := pubsub.SubscribeTo[*api.RoomListUpdatedEvent](ctx)
 
 	socket.On("disconnect", func(args ...any) {
 		unsubscribe()
