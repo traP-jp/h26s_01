@@ -50,6 +50,7 @@ func (r *Repository) GetCurrentRoundIndexByRoomID(ctx context.Context, gameID uu
 
 	return roundIndex, nil
 }
+
 func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID uuid.UUID) (int, error) {
 	var totalTime int
 	var roundIDs []uuid.UUID
@@ -75,7 +76,7 @@ func (r *Repository) GetAllRounds(ctx context.Context, roomID uuid.UUID) ([]mode
 
 	results := make([]model.RoundWithResult, 0, len(rounds))
 	for _, round := range rounds {
-		roundResult, err := r.GetRoundResult(ctx, round.ID) 
+		roundResult, err := r.GetRoundResult(ctx, round.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -89,14 +90,14 @@ func (r *Repository) GetAllRounds(ctx context.Context, roomID uuid.UUID) ([]mode
 		if err != nil {
 			return nil, err
 		}
-		
+
 		results = append(results, model.RoundWithResult{
-			ID: round.ID,
-			GuesserID: round.GuesserID,
+			ID:            round.ID,
+			GuesserID:     round.GuesserID,
 			GuesserAnswer: roundResult.GuesserAnswer,
-			ActualAnswer: kanji,
-			TimeMs: roundResult.TimeMs,
-			Strokes: strokes,
+			ActualAnswer:  kanji,
+			TimeMs:        roundResult.TimeMs,
+			Strokes:       strokes,
 		})
 	}
 	return results, nil
