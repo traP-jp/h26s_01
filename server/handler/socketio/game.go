@@ -78,6 +78,9 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		if err != nil {
 			return err
 		}
+		pubsub.Publish(context.Background(), &roomListUpdatedEvent)
+		pubsub.Publish(context.Background(), &roomUpdatedEvent)
+
 		slog.Info("Game started, beginning first round", "roomID", roomID)
 		h.handleRoundStarted(s, roomID)
 	} else {
