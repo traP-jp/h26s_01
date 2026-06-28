@@ -22,7 +22,6 @@ onBeforeUnmount(() => {
   lobbySocketEvents.cleanup();
   roomSocket.cleanup();
   gameSocket.cleanup();
-  session.initializeSession();
 });
 </script>
 
