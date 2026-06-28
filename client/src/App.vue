@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted } from 'vue';
+import { onBeforeUnmount, onMounted } from 'vue';
 
 import { useGameSocket } from './composables/useGameSocket';
 import { useLobbySocketEvents } from './composables/useLobbySocketEvents';

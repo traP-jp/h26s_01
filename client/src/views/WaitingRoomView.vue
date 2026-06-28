@@ -1,30 +1,34 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
 
 import BaseButton from '@/components/common/BaseButton.vue';
 import TheHeader from '@/components/common/TheHeader.vue';
 import UserIcon from '@/components/common/UserIcon.vue';
-import { useGameSocket } from '@/composables/useGameSocket';
+import { useReturnHomeByDisconnect } from '@/composables/useReturnHomeByDisconnect';
 import { useRoomSocket } from '@/composables/useRoomSocket';
 import { useRoomStore } from '@/stores/room';
 import { toKanjiNumber } from '@/utils/to-kanji-number';
 
-const { currentRoom } = storeToRefs(useRoomStore());
+const roomStore = useRoomStore();
+const { currentRoom } = storeToRefs(roomStore);
 const { sendReady } = useRoomSocket();
-
-const isReady = ref(false);
+const { returnHomeByDisconnect } = useReturnHomeByDisconnect();
 
 const handleClick = () => {
-  const res = sendReady();
-  if (res) {
-    isReady.value = true;
+  sendReady();
+};
+
+const handleAbort = async () => {
+  if (!window.confirm('ゲームを中止してトップへ戻りますか？')) {
+    return;
   }
+
+  await returnHomeByDisconnect();
 };
 </script>
 
 <template>
-  <div class="min-h-screen bg-background" v-if="currentRoom">
+  <div v-if="currentRoom" class="min-h-screen bg-background">
     <TheHeader />
     <div>
       <div class="flex flex-row gap-24 items-baseline mt-20 ml-28">
@@ -43,8 +47,16 @@ const handleClick = () => {
         </div>
       </div>
     </div>
-    <div class="fixed bottom-16 right-24">
-      <BaseButton v-if="!isReady" variant="primary" @btn-click="handleClick">準備完了</BaseButton>
+    <div class="fixed bottom-16 right-24 flex flex-col items-end gap-4">
+      <BaseButton variant="secondary" @btn-click="handleAbort">中止して戻る</BaseButton>
+      <BaseButton
+        v-if="!roomStore.isReady"
+        variant="primary"
+        :disabled="!roomStore.canSendReady"
+        @btn-click="handleClick"
+        >準備完了</BaseButton
+      >
+      <p v-else class="text-3xl text-primary">準備完了</p>
     </div>
   </div>
 </template>

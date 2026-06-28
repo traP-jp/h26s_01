@@ -2,6 +2,7 @@
   <div class="flex">
     <svg
       v-for="n in 3"
+      :key="n"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

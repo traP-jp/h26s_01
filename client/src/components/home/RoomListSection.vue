@@ -1,29 +1,36 @@
 <script lang="ts" setup>
-import { storeToRefs } from 'pinia';
-import { onMounted } from 'vue';
-
-import { useLobby } from '@/composables/useLobby.ts';
-import { useLobbyStore } from '@/stores/lobby.ts';
+import type { Room } from '@/types/api';
 
 import RoomListItem from './RoomListItem.vue';
 
-const { fetchRooms } = useLobby();
-const { waitingRooms } = storeToRefs(useLobbyStore());
+const props = defineProps<{
+  rooms: Room[];
+  isJoining: boolean;
+  isLoading: boolean;
+  error: string | null;
+}>();
 
-onMounted(async () => {
-  console.log('DEBUG1');
-  const r = await fetchRooms();
-  console.log('DEBUG2');
-  console.log(waitingRooms);
-  console.log(r);
-});
+const emit = defineEmits<{
+  join: [roomId: string];
+}>();
 </script>
 
 <template>
   <section class="space-y-5 p-8">
     <h2 class="text-3xl">部屋の一覧</h2>
-    <ul class="flex flex-col gap-2">
-      <RoomListItem v-for="room in waitingRooms" :key="room.id" :room="room" />
+    <p v-if="props.isLoading" class="text-xl text-primary">読み込み中</p>
+    <p v-else-if="props.error !== null" class="text-xl text-primary">{{ props.error }}</p>
+    <p v-else-if="props.rooms.length === 0" class="text-xl text-primary">
+      参加できる部屋がありません
+    </p>
+    <ul v-else class="flex flex-col gap-2">
+      <RoomListItem
+        v-for="room in props.rooms"
+        :key="room.id"
+        :disabled="props.isJoining"
+        :room="room"
+        @join="emit('join', $event)"
+      />
     </ul>
   </section>
 </template>

@@ -2,7 +2,25 @@
 import UserIcon from '@/components/common/UserIcon.vue';
 
 import LeftSideSection from './LeftSideSection.vue';
-import UserCard from './UserCard.vue';
+
+const props = defineProps<{
+  roundLabel: string;
+  turnLabel: string;
+  elapsedSeconds: number | null;
+  guesserId: string | null;
+  currentDrawerId: string | null;
+  remainingStrokes: number;
+}>();
+
+const formatElapsed = (seconds: number | null) => {
+  if (seconds === null) {
+    return '-';
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const restSeconds = seconds % 60;
+  return `${minutes}分${restSeconds.toString().padStart(2, '0')}秒`;
+};
 </script>
 
 <template>
@@ -13,24 +31,35 @@ import UserCard from './UserCard.vue';
     <LeftSideSection>
       <template #title>今の状況</template>
       <template #default>
-        <p class="text-2xl">九文字目の一画目<br />二分五十秒が経過</p>
+        <div class="space-y-2 text-2xl">
+          <p>文字 {{ props.roundLabel || '-' }}</p>
+          <p>画数 {{ props.turnLabel || '-' }}</p>
+          <p>残り {{ props.remainingStrokes }}画</p>
+          <p>{{ formatElapsed(props.elapsedSeconds) }}が経過</p>
+        </div>
       </template>
     </LeftSideSection>
     <LeftSideSection>
       <template #title>読み手</template>
       <template #default>
-        <UserIcon tra-qid="%ここにGuesserのid%" size="small" />
+        <div v-if="props.guesserId" class="flex items-center gap-3">
+          <UserIcon :tra-qid="props.guesserId" size="small" />
+          <p class="break-all text-lg">{{ props.guesserId }}</p>
+        </div>
+        <p v-else class="text-lg">-</p>
       </template>
     </LeftSideSection>
     <LeftSideSection>
       <template #title>書き手</template>
       <template #default>
-        <div class="flex flex-col gap-3">
+        <div v-if="props.currentDrawerId" class="flex flex-col gap-3">
           <p class="underline text-lg">只今作業中</p>
-          <UserIcon tra-qid="%ここに次の書き手のid%" size="small" />
-          <p class="text-lg">以降</p>
-          <UserIcon tra-qid="%ここに以降の書き手のid%, v-forで回す" size="small" />
+          <div class="flex items-center gap-3">
+            <UserIcon :tra-qid="props.currentDrawerId" size="small" />
+            <p class="break-all text-lg">{{ props.currentDrawerId }}</p>
+          </div>
         </div>
+        <p v-else class="text-lg">-</p>
       </template>
     </LeftSideSection>
   </div>
