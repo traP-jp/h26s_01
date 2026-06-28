@@ -59,7 +59,7 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		return err
 	}
 
-	pubsub.Publish(s.Request().Context(), roomListUpdatedEvent)
+	pubsub.Publish(s.Request().Context(), &roomListUpdatedEvent)
 	pubsub.Publish(s.Request().Context(), roomUpdatedEvent)
 
 	if h.isAllUsersReady(s.Request().Context(), roomID) {
