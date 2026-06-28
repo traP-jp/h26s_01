@@ -57,12 +57,21 @@ func createEventListenerForHandlersWithoutBody(socket *socket.Socket, handler fu
 
 func createEventListenerForHandlersWithBody[T any](socket *socket.Socket, handler func(socket *socket.Socket, event T) error) func(args ...any) {
 	return func(args ...any) {
-		bodyBytes, ok := args[0].([]byte)
+		var bodyBytes []byte
+		var err error
 
-		if !ok {
-			slog.Error("bodyBytes assertion failed")
+		switch arg := args[0].(type) {
+		case []byte:
+			bodyBytes = arg
+		case string:
+			bodyBytes = []byte(arg)
+		default:
+			bodyBytes, err = json.Marshal(arg)
+			if err != nil {
+				slog.Error("marshaling event body", "error", err)
 
-			return
+				return
+			}
 		}
 
 		var event T
