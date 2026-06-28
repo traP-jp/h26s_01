@@ -6,7 +6,7 @@ const test: ResultProps = {
   actualAnswer: '詰',
   guesserAnswer: '読',
   traqId: 'yadorigi',
-}
+};
 </script>
 
 <template>
