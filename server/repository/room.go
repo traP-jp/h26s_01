@@ -14,7 +14,7 @@ func (r *Repository) ListRooms(ctx context.Context) ([]model.Room, error) {
 	if err := r.db.SelectContext(ctx, &rooms, "SELECT id, name, status FROM rooms WHERE status = 'playing' OR status = 'waiting'"); err != nil {
 		return nil, err
 	}
-	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready FROM room_members"); err != nil {
+	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready, is_connected FROM room_members"); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +99,7 @@ func (r *Repository) GetRoom(ctx context.Context, roomId uuid.UUID) (*model.Room
 		return nil, err
 	}
 
-	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready FROM room_members WHERE room_id = ?", roomId); err != nil {
+	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready, is_connected FROM room_members WHERE room_id = ?", roomId); err != nil {
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (r *Repository) GetRoom(ctx context.Context, roomId uuid.UUID) (*model.Room
 func (r *Repository) GetRoomMembersOrderedByGuesserOrder(ctx context.Context, roomId uuid.UUID) ([]model.RoomMember, error) {
 	var members []model.RoomMember
 
-	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready, guesser_order FROM room_members WHERE room_id = ? ORDER BY guesser_order ASC", roomId); err != nil {
+	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready, is_connected, guesser_order FROM room_members WHERE room_id = ? ORDER BY guesser_order ASC", roomId); err != nil {
 		return nil, err
 	}
 
