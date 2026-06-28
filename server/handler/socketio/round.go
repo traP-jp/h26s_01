@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	maxCorrect   = 9
-	maxIncorrect = 3
+	MaxCorrect   = 9
+	MaxIncorrect = 3
 )
 
 func (h *Handler) handleRoundEnd(s *socket.Socket) error {
@@ -40,11 +40,11 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 		return err
 	}
 
-	remainLives := maxIncorrect - incorrect
-	if incorrect >= maxIncorrect {
+	remainLives := MaxIncorrect - incorrect
+	if incorrect >= MaxIncorrect {
 		// TODO: game:end (cleared: false)
 		h.handleGameEnd(s, roomID, round, remainLives, false)
-	} else if correct >= maxCorrect {
+	} else if correct >= MaxCorrect {
 		// TODO: game:end (cleared: true)
 		h.handleGameEnd(s, roomID, round, remainLives, true)
 	} else {
