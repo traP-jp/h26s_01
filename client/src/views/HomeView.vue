@@ -63,8 +63,8 @@ const handleRoomUpdated = (event: RoomUpdatedEvent) => {
     return;
   }
 
+  roomStore.setRoom(event.room);
   joiningRoomId.value = null;
-  router.replace('/game');
 };
 
 onMounted(() => {

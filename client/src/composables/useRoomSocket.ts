@@ -8,8 +8,12 @@ const roomUpdatedHandlers = new Set<(event: RoomUpdatedEvent) => void>();
 
 const handleRoomUpdated = (event: RoomUpdatedEvent) => {
   const roomStore = useRoomStore();
+  const currentRoomId = roomStore.roomId;
 
-  roomStore.setRoom(event.room);
+  if (currentRoomId !== null && event.room.id === currentRoomId) {
+    roomStore.setRoom(event.room);
+  }
+
   roomUpdatedHandlers.forEach((handler) => {
     handler(event);
   });
