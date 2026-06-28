@@ -22,7 +22,7 @@ func (r *Repository) CreateTurn(ctx context.Context, turn *model.Turn) error {
 		return err
 	}
 	query := "INSERT INTO turns (id, round_id, turn_index, drawer_id) VALUES (?, ?, ?, ?)"
-	if err := r.db.GetContext(ctx, &turn, query, turn.ID, turn.RoundID, turn.TurnIndex, turn.DrawerID); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, turn.ID, turn.RoundID, turn.TurnIndex, turn.DrawerID); err != nil {
 		return err
 	}
 	return nil
