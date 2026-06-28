@@ -18,8 +18,8 @@ func (r *Repository) GetRoundResult(ctx context.Context, roundId uuid.UUID) (mod
 
 func (r *Repository) CountRoundResult(ctx context.Context, gameId uuid.UUID) (correct int, incorrect int, err error) {
 	query := `SELECT
-	SUM(rr.guesser_answer = gk.character) AS correct,
-	SUM(rr.guesser_answer != gk.character) AS incorrect
+	SUM(rr.guesser_answer = gk.` + "`" + `character` + "`" + `) AS correct,
+	SUM(rr.guesser_answer != gk.` + "`" + `character` + "`" + `) AS incorrect
 	FROM rounds r
 	JOIN round_results rr ON rr.round_id = r.id
 	JOIN game_kanjies gk ON gk.id = r.kanji_id
@@ -29,7 +29,7 @@ func (r *Repository) CountRoundResult(ctx context.Context, gameId uuid.UUID) (co
 		Correct   int `db:"correct"`
 		Incorrect int `db:"incorrect"`
 	}
-	
+
 	if err := r.db.GetContext(ctx, &result, query, gameId); err != nil {
 		return 0, 0, err
 	}
@@ -57,7 +57,7 @@ func (r *Repository) SubmitAnswer(ctx context.Context, roundID uuid.UUID, curren
 
 func (r *Repository) GetActualAnswer(ctx context.Context, roundID uuid.UUID) (string, error) {
 	var actualAnswer string
-	err := r.db.GetContext(ctx, &actualAnswer, "SELECT game_kanjies.character FROM rounds JOIN game_kanjies ON rounds.kanji_id = game_kanjies.id WHERE rounds.id = ?", roundID)
+	err := r.db.GetContext(ctx, &actualAnswer, "SELECT game_kanjies.`character` FROM rounds JOIN game_kanjies ON rounds.kanji_id = game_kanjies.id WHERE rounds.id = ?", roundID)
 	if err != nil {
 		return "", err
 	}
