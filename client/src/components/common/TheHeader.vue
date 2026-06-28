@@ -9,8 +9,10 @@ const { userId } = storeToRefs(useUserStore());
 </script>
 
 <template>
-  <header class="sticky top-0 bg-primary p-8 flex justify-between text-background items-center">
-    <h1 class="text-2xl">以線伝心</h1>
+  <header
+    class="sticky top-0 bg-primary px-5 py-3 flex justify-between text-background items-center"
+  >
+    <img src="/public/favicon.ico" alt="以線伝心のロゴ" class="size-24" />
     <div class="flex gap-3 items-center" v-if="userId">
       <UserIcon :tra-qid="userId" size="small" />
       <p>{{ userId }}</p>
