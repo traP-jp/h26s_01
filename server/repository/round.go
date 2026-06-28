@@ -35,7 +35,7 @@ func (r *Repository) CreateRound(ctx context.Context, round *model.Round) error 
 		return err
 	}
 	query := "INSERT INTO rounds (id, game_id, round_index, guesser_id, kanji_id, started_at) VALUES (?, ?, ?, ?, ?, ?) "
-	if err := r.db.GetContext(ctx, &round, query, round.ID, round.GameID, round.RoundIndex, round.GuesserID, round.KanjiID, round.StartedAt); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, round.ID, round.GameID, round.RoundIndex, round.GuesserID, round.KanjiID, round.StartedAt); err != nil {
 		return err
 	}
 	return nil
