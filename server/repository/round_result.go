@@ -54,3 +54,13 @@ func (r *Repository) SubmitAnswer(ctx context.Context, roundID uuid.UUID, curren
 
 	return nil
 }
+
+func (r *Repository) GetActualAnswer(ctx context.Context, roundID uuid.UUID) (string, error) {
+	var actualAnswer string
+	err := r.db.GetContext(ctx, &actualAnswer, "SELECT game_kanjies.character FROM rounds JOIN game_kanjies ON rounds.kanji_id = game_kanjies.id WHERE rounds.id = ?", roundID)
+	if err != nil {
+		return "", err
+	}
+
+	return actualAnswer, nil
+}
