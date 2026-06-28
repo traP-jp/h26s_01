@@ -27,10 +27,10 @@ const handleClick = async () => {
         <UserIcon v-for="member in room.members" :tra-qid="member.id" size="medium" />
       </div>
       <p class="text-center">{{ toKanjiNumber(room.members.length) }}人が参加中</p>
-      <BaseButton v-if="room.status = 'waiting'" variant="primary" v-on:btn-click="handleClick"
+      <BaseButton v-if="room.status == 'waiting'" variant="primary" v-on:btn-click="handleClick"
         >参加</BaseButton
       >
-      <BaseButton v-if="room.status = 'playing'" variant="secondary" disabled>遊戯中</BaseButton>
+      <BaseButton v-if="room.status == 'playing'" variant="secondary" disabled>遊戯中</BaseButton>
     </div>
   </li>
 </template>
