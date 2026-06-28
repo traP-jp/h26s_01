@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/WillYingling/pubsub"
@@ -220,6 +221,7 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 	if err != nil {
 		return err
 	}
+	slog.Debug("Kanji for round", "kanji", kanji)
 	KanjiChar := kanji
 
 	roundStartedEvent := api.RoundStartedEvent{
@@ -227,8 +229,10 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 		Kanji:      &KanjiChar,
 		RoundIndex: int(round.RoundIndex),
 	}
+	slog.Debug("Publishing round:started event", "event", roundStartedEvent)
 
 	pubsub.Publish(context.Background(), roundStartedEvent)
+	slog.Debug("Published round:started event", "event", roundStartedEvent)
 
 	var firstDrawerID string
 	for _, member := range members {
