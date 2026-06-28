@@ -46,7 +46,7 @@ func (h *Handler) handleJoinRoom(s *socket.Socket, event api.RoomJoinEvent) erro
 		return err
 	}
 
-	pubsub.Publish(s.Request().Context(), roomListUpdatedEvent)
+	pubsub.Publish(s.Request().Context(), &roomListUpdatedEvent)
 	pubsub.Publish(s.Request().Context(), roomUpdatedEvent)
 
 	return nil

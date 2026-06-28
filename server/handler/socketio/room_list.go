@@ -10,7 +10,7 @@ import (
 
 func (h *Handler) handleRoomListUpdated(socket *socket.Socket) error {
 	ctx := socket.Request().Context()
-	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoomListUpdatedEvent](ctx)
+	eventCh, unsubscribe := pubsub.SubscribeTo[*api.RoomListUpdatedEvent](ctx)
 
 	socket.On("disconnect", func(args ...any) {
 		unsubscribe()
