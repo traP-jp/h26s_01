@@ -6,10 +6,14 @@ const props = withDefaults(
   }>(),
   { disabled: false },
 );
+defineEmits<{
+  (e: 'btnClick'): void;
+}>();
 </script>
 
 <template>
   <button
+    @click="$emit('btnClick')"
     type="button"
     :disabled="props.disabled"
     class="text-2xl px-12 py-2 border-4 border-primary transition"

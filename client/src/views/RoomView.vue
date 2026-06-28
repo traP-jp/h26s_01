@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import LastResult, { type LastResultProps } from '@/components/room/last-result/LastResult.vue';
-import ResultMojigoto from '@/components/room/ResultMojigoto.vue';
-import WaitingRoom from '@/components/room/waiting/WaitingRoom.vue';
+import { storeToRefs } from 'pinia';
+import { watch } from 'vue';
+import { useRouter } from 'vue-router';
 
-const retest: LastResultProps = {
-  successGame: 7,
-  loseGame: 2,
-};
+import { useRoomStore } from '@/stores/room';
+
+import PlayingRoomView from './PlayingRoomView.vue';
+import WaitingRoomView from './WaitingRoomView.vue';
+
+const router = useRouter();
+const { currentRoom } = storeToRefs(useRoomStore());
+
+watch(
+  currentRoom,
+  (room) => {
+    if (room === null) {
+      router.replace('/');
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <WaitingRoom />
-  <ResultMojigoto />
-  <LastResult :lastData="retest" />
+  <WaitingRoomView v-if="currentRoom?.status === 'waiting'" />
+  <PlayingRoomView v-else-if="currentRoom?.status === 'playing'" />
 </template>

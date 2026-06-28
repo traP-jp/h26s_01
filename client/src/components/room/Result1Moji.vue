@@ -38,7 +38,7 @@ defineProps<{
         </div>
         <div class="flex flex-row items-center gap-12 mt-8 ml-16">
           <p class="text-primary text-4xl">回答者</p>
-          <UserIcon :tra-qid="resultData.traqId" size="medium" />
+          <UserIcon :tra-qid="resultData.traqId" size="small" />
         </div>
       </div>
     </div>
