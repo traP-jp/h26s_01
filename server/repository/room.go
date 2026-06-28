@@ -106,3 +106,7 @@ func (r *Repository) GetRoomMembersOrderedByGuesserOrder(ctx context.Context, ro
 	return members, nil
 }
 
+func (r *Repository) ChangeGameStatus(ctx context.Context, roomId uuid.UUID, status string) error {
+	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = '?' WHERE id = ?", status, roomId)
+	return err
+}
