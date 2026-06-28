@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import BaseButton from '../common/BaseButton.vue';
-import Result1Moji from './Result1Moji.vue';
+import Result1Moji, { type ResultProps } from './Result1Moji.vue';
+const test: ResultProps = {
+  count: 3,
+  actualAnswer: '詰',
+  guesserAnswer: '読',
+  traqId: 'yadorigi',
+}
 </script>
 
 <template>
@@ -13,7 +19,7 @@ import Result1Moji from './Result1Moji.vue';
     </div>
     <div class="w-full h-1 bg-primary mt-16"></div>
     <div class="mt-12">
-      <Result1Moji />
+      <Result1Moji :result-data="test" />
     </div>
   </div>
 </template>
