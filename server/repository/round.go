@@ -49,6 +49,7 @@ func (r *Repository) GetCurrentRoundIndexByRoomID(ctx context.Context, gameID uu
 	}
 
 	return roundIndex, nil
+}
 func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID uuid.UUID) (int, error) {
 	var totalTime int
 	var roundIDs []uuid.UUID
