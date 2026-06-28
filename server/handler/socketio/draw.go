@@ -2,6 +2,7 @@ package socketio
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 const maxStrokeCount = 9
 
 func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) error {
+	slog.Info("[draw:stroke] received", "socketID", s.Id(), "event", event)
 	var roomID socket.Room
 	for _, room := range s.Rooms().Keys() {
 		if room != socket.Room(s.Id()) {
@@ -20,16 +22,21 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 			break
 		}
 	}
+	slog.Info("[draw:stroke] roomID resolved", "roomID", roomID)
 
 	roomUUID, err := uuid.Parse(string(roomID))
 	if err != nil {
+		slog.Error("[draw:stroke] failed to parse roomUUID", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] roomUUID parsed", "roomUUID", roomUUID)
 
 	turnId, err := h.repo.GetTurnIDbyRoomID(context.Background(), roomUUID)
 	if err != nil {
+		slog.Error("[draw:stroke] failed to get turnID", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] turnID retrieved", "turnID", turnId)
 
 	stroke := model.Stroke{
 		TurnID: turnId,
@@ -38,36 +45,49 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		X2:     event.X2,
 		Y2:     event.Y2,
 	}
+	slog.Info("[draw:stroke] stroke model created", "stroke", stroke)
 
 	if err = h.repo.SaveStroke(context.Background(), stroke); err != nil {
+		slog.Error("[draw:stroke] failed to save stroke", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] stroke saved")
 
 	s.To(roomID).Emit("draw:stroke", event)
+	slog.Info("[draw:stroke] emitted to room", "roomID", roomID)
 
 	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err != nil {
+		slog.Error("[draw:stroke] failed to get current round", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] current round retrieved", "roundID", round.ID, "roundIndex", round.RoundIndex)
 
 	turnCount, err := h.repo.GetTurnCountByRoundID(context.Background(), round.ID)
 	if err != nil {
+		slog.Error("[draw:stroke] failed to get turn count", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] turn count retrieved", "turnCount", turnCount)
 
 	if turnCount >= maxStrokeCount {
+		slog.Info("[draw:stroke] max stroke count reached", "turnCount", turnCount, "maxStrokeCount", maxStrokeCount)
 		return nil
 	}
 
 	currentTurn, err := h.repo.GetTurnByID(context.Background(), turnId)
 	if err != nil {
+		slog.Error("[draw:stroke] failed to get current turn", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] current turn retrieved", "currentTurn", currentTurn)
 
 	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(context.Background(), roomUUID)
 	if err != nil {
+		slog.Error("[draw:stroke] failed to get room members", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] room members retrieved", "memberCount", len(members))
 
 	currentDrawerIndex := -1
 	for i, member := range members {
@@ -76,8 +96,10 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 			break
 		}
 	}
+	slog.Info("[draw:stroke] current drawer index found", "currentDrawerIndex", currentDrawerIndex, "currentDrawerID", currentTurn.DrawerID)
 
 	if currentDrawerIndex == -1 {
+		slog.Warn("[draw:stroke] current drawer not found in members")
 		return nil
 	}
 
@@ -100,6 +122,9 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 
 	if nextDrawerID == "" {
 		nextDrawerID = currentTurn.DrawerID
+		slog.Warn("[draw:stroke] no next drawer found, reusing current drawer", "nextDrawerID", nextDrawerID)
+	} else {
+		slog.Info("[draw:stroke] next drawer determined", "nextDrawerID", nextDrawerID)
 	}
 
 	nextTurn := model.Turn{
@@ -108,17 +133,24 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		DrawerID:  nextDrawerID,
 	}
 	if err := h.repo.CreateTurn(context.Background(), &nextTurn); err != nil {
+		slog.Error("[draw:stroke] failed to create next turn", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] next turn created", "nextTurn", nextTurn)
+
 	if err := h.repo.UpdateRoundCurrentTurn(context.Background(), round.ID, nextTurn.ID); err != nil {
+		slog.Error("[draw:stroke] failed to update round current turn", "error", err)
 		return err
 	}
+	slog.Info("[draw:stroke] round current turn updated", "roundID", round.ID, "nextTurnID", nextTurn.ID)
 
 	turnStartedEvent := api.TurnStartedEvent{
 		DrawerId:  nextTurn.DrawerID,
 		TurnIndex: int(nextTurn.TurnIndex),
 	}
+	slog.Info("[draw:stroke] publishing turn:started event", "event", turnStartedEvent)
 	pubsub.Publish(context.Background(), turnStartedEvent)
+	slog.Info("[draw:stroke] turn:started event published")
 
 	return nil
 }
