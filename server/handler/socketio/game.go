@@ -74,10 +74,27 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 
 	if h.isAllUsersReady(context.Background(), roomID) {
 		slog.Info("All users ready, starting game", "roomID", roomID)
-		err := h.repo.StartGame(context.Background(), roomID, len(room.Members))
+		if err := h.repo.StartGame(context.Background(), roomID, len(room.Members)); err != nil {
+			return err
+		}
+
+		latestRoom, err := h.repo.GetRoom(context.Background(), roomID)
 		if err != nil {
 			return err
 		}
+
+		apiRoom := latestRoom.AsAPIRoom()
+		roomUpdatedEvent := api.RoomUpdatedEvent{
+			EventType: api.RoomUpdated,
+			Room:      *apiRoom,
+		}
+
+		var roomListUpdatedEvent api.RoomListUpdatedEvent
+
+		if err := roomListUpdatedEvent.FromRoomUpdatedEvent(roomUpdatedEvent); err != nil {
+			return err
+		}
+
 		pubsub.Publish(context.Background(), &roomListUpdatedEvent)
 		pubsub.Publish(context.Background(), &roomUpdatedEvent)
 
