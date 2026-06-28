@@ -84,7 +84,7 @@ func (r *Repository) StartGame(ctx context.Context, roomId uuid.UUID, playerCoun
 		return err
 	}
 	for i, kanji := range kanjies {
-		if _, err = r.db.ExecContext(ctx, "INSERT INTO game_kanjies (id, game_id, character, kanji_order) VALUES (?, ?, ?, ?)", gameKanjiesId, roomId, kanji.Char, i+1); err != nil {
+		if _, err = r.db.ExecContext(ctx, "INSERT INTO game_kanjies (id, game_id, `character`, kanji_order) VALUES (?, ?, ?, ?)", gameKanjiesId, roomId, kanji.Char, i+1); err != nil {
 			return err
 		}
 	}
