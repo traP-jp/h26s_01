@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import UserIcon from '@/components/common/UserIcon.vue';
+import { toKanjiNumber } from '@/utils/to-kanji-number';
 
 import LeftSideSection from './LeftSideSection.vue';
 
@@ -19,8 +20,14 @@ const formatElapsed = (seconds: number | null) => {
 
   const minutes = Math.floor(seconds / 60);
   const restSeconds = seconds % 60;
-  return `${minutes}分${restSeconds.toString().padStart(2, '0')}秒`;
+  return `${toKanjiNumber(minutes)}分${toKanjiNumber(restSeconds)}秒`;
 };
+
+const formatProgress = (label: string) =>
+  label
+    .split(' / ')
+    .map((value) => toKanjiNumber(Number(value)))
+    .join(' / ');
 </script>
 
 <template>
@@ -32,10 +39,10 @@ const formatElapsed = (seconds: number | null) => {
       <template #title>今の状況</template>
       <template #default>
         <div class="space-y-2 text-2xl">
-          <p>文字 {{ props.roundLabel || '-' }}</p>
-          <p>画数 {{ props.turnLabel || '-' }}</p>
-          <p>残り {{ props.remainingStrokes }}画</p>
-          <p>{{ formatElapsed(props.elapsedSeconds) }}が経過</p>
+          <p>文字 {{ props.roundLabel ? formatProgress(props.roundLabel) : '-' }}</p>
+          <p>画数 {{ props.turnLabel ? formatProgress(props.turnLabel) : '-' }}</p>
+          <p>残り {{ toKanjiNumber(props.remainingStrokes) }}画</p>
+          <p>{{ formatElapsed(props.elapsedSeconds) }}</p>
         </div>
       </template>
     </LeftSideSection>
