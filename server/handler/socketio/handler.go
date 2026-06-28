@@ -29,6 +29,25 @@ func NewHandler(repo *repository.Repository) *Handler {
 }
 
 func (h *Handler) Start() (err error) {
+	h.io.Use(func(soc *socket.Socket, next func(*socket.ExtendedError)) {
+		// Directly access the underlying HTTP request headers
+		userID := soc.Client().Request().Request().Header.Get("X-Forwarded-User")
+
+		if userID == "" {
+			next(socket.NewExtendedError("unauthorized: X-Forwarded-User header not found", nil))
+			return
+		}
+
+		user, err := h.repo.GetOrCreateUser(context.Background(), userID)
+		if err != nil {
+			next(socket.NewExtendedError("failed to get or create user", err.Error()))
+			return
+		}
+
+		soc.SetData(user)
+		next(nil)
+	})
+
 	return h.io.On("connection", func(args ...any) {
 		socket, ok := args[0].(*socket.Socket)
 
@@ -43,7 +62,8 @@ func (h *Handler) Start() (err error) {
 }
 
 func (h *Handler) getLoggedInUser(socket *socket.Socket) (*model.User, error) {
-	userID := socket.Handshake().Headers.Header().Get("X-Forwarded-User")
+	// Directly access the underlying HTTP request headers
+	userID := socket.Client().Request().Request().Header.Get("X-Forwarded-User")
 
 	return h.repo.GetOrCreateUser(context.Background(), userID)
 }
