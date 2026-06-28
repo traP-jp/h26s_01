@@ -56,7 +56,8 @@ const emit = defineEmits<{
         :value="props.answer"
         class="outline-none text-2xl p-3 border-4 border-primary bg-background text-primary"
         type="text"
-        placeholder="回答"
+        placeholder="回答は一文字だけです"
+        maxlength="1"
         @input="emit('update:answer', ($event.target as HTMLInputElement).value)"
       />
       <BaseButton
