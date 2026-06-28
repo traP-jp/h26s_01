@@ -186,6 +186,7 @@ onBeforeUnmount(() => {
           :can-submit-stroke="canSubmitDraftStroke"
           :is-guesser="gameStore.isGuesser"
           :phase="gameStore.phase"
+          :remaining-lives="gameStore.remainingLives"
           @abort="handleAbort"
           @clear-stroke="clearDraftStroke"
           @end-round="endRound"

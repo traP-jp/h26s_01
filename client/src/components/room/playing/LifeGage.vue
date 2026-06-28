@@ -1,14 +1,29 @@
+<script setup lang="ts">
+import { MAX_LIVES } from '@/constants/game';
+import { toKanjiNumber } from '@/utils/to-kanji-number';
+
+const props = defineProps<{
+  remainingLives: number;
+}>();
+</script>
+
 <template>
-  <div class="flex">
+  <div
+    class="flex"
+    role="img"
+    :aria-label="`残機${toKanjiNumber(props.remainingLives)}`"
+  >
     <svg
-      v-for="n in 3"
+      v-for="n in MAX_LIVES"
       :key="n"
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
       stroke-width="1"
       stroke="currentColor"
-      class="size-18 fill-primary"
+      class="size-18"
+      :class="n <= props.remainingLives ? 'fill-primary' : 'fill-transparent opacity-40'"
     >
       <path
         stroke-linecap="round"
