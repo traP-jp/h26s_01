@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	MinStroke     = 13
-	MaxRoundCount = 9
+	MinStroke    = 13
+	MaxCorrect   = 9
+	MaxIncorrect = 3
 )
 
 //go:embed kanji.csv
@@ -41,7 +42,7 @@ func parseKanji() ([]Kanji, error) {
 	return kanjis, nil
 }
 
-func SelectKanjies() ([]Kanji, error) {
+func SelectKanjies(playerCount int) ([]Kanji, error) {
 	kanjies, err := parseKanji()
 	if err != nil {
 		return nil, err
@@ -57,6 +58,6 @@ func SelectKanjies() ([]Kanji, error) {
 	rand.Shuffle(len(filtered), func(i, j int) {
 		filtered[i], filtered[j] = filtered[j], filtered[i]
 	})
-
-	return filtered[:9], nil
+	requiredNum := MaxCorrect + MaxIncorrect + playerCount
+	return filtered[:requiredNum], nil
 }
