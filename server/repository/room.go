@@ -45,21 +45,13 @@ func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId str
 		return model.Room{}, err
 	}
 
-	_, err = r.db.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id) VALUES (?, ?)", roomId, userId)
-	if err != nil {
-		return model.Room{}, err
-	}
-
-	roomMember := model.RoomMember{
-		RoomID: roomId,
-		UserID: userId,
-	}
+	// この段階ではまだjoinさせない
 
 	room := model.Room{
 		ID:      roomId,
 		Name:    roomName,
 		Status:  "waiting",
-		Members: []model.RoomMember{roomMember},
+		Members: []model.RoomMember{},
 	}
 
 	return room, nil
