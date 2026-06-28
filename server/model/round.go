@@ -15,3 +15,14 @@ type Round struct {
 	KanjiID       uuid.UUID     `db:"kanji_id"`
 	StartedAt     time.Time     `db:"started_at"`
 }
+
+// game:endでevent送信するための構造体 (strokeは別で送る)
+type RoundWithResult struct {
+    ID            uuid.UUID `db:"id"`
+    GuesserID     string    `db:"guesser_id"`
+    GuesserAnswer string    `db:"guesser_answer"`
+    ActualAnswer  string    `db:"character"`
+    TimeMs        uint32    `db:"time_ms"`
+	Strokes       []StrokeWithDrawerID `db:"-"`
+}
+
