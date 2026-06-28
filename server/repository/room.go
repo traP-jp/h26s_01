@@ -76,19 +76,15 @@ func (r *Repository) SetUserReady(ctx context.Context, roomId uuid.UUID, userId 
 }
 
 func (r *Repository) StartGame(ctx context.Context, roomId uuid.UUID, playerCount int) error {
-	roundId, err := uuid.NewV7()
-	if err != nil {
-		return err
-	}
 	if _, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = 'playing' WHERE id = ?", roomId); err != nil {
 		return err
 	}
-	if _, err = r.db.ExecContext(ctx, "INSERT INTO games (room_id, current) VALUES (?, ?)", roomId, roundId); err != nil {
+	if _, err := r.db.ExecContext(ctx, "INSERT INTO games (room_id) VALUES (?)", roomId); err != nil {
 		return err
 	}
 
 	kanjies, err := kanjipool.SelectKanjies(playerCount)
-	if _, err = r.db.ExecContext(ctx, "INSERT INTO games (room_id, current) VALUES (?, ?)", roomId, roundId); err != nil {
+	if err != nil {
 		return err
 	}
 	gameKanjiesId, err := uuid.NewV7()
