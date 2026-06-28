@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/api"
 	"github.com/zishang520/socket.io/servers/socket/v3"
@@ -67,8 +66,8 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		return err
 	}
 
-	pubsub.Publish(context.Background(), &roomListUpdatedEvent)
-	pubsub.Publish(context.Background(), &roomUpdatedEvent)
+	h.io.Emit("room_list:updated", &roomListUpdatedEvent)
+	h.io.To(socket.Room(roomID.String())).Emit("room:updated", &roomUpdatedEvent)
 
 	slog.Info("Checking if all users are ready", "roomID", roomID)
 
@@ -95,8 +94,8 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 			return err
 		}
 
-		pubsub.Publish(context.Background(), &roomListUpdatedEvent)
-		pubsub.Publish(context.Background(), &roomUpdatedEvent)
+		h.io.Emit("room_list:updated", &roomListUpdatedEvent)
+		h.io.To(socket.Room(roomID.String())).Emit("room:updated", &roomUpdatedEvent)
 
 		slog.Info("Game started, beginning first round", "roomID", roomID)
 		h.handleRoundStarted(s, roomID)

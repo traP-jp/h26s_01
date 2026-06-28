@@ -7,6 +7,7 @@ import (
 	"github.com/traP-jp/h26s_01/server/handler/rest"
 	"github.com/traP-jp/h26s_01/server/handler/socketio"
 	"github.com/traP-jp/h26s_01/server/repository"
+	"github.com/zishang520/socket.io/servers/socket/v3"
 )
 
 type Server struct {
@@ -16,10 +17,12 @@ type Server struct {
 }
 
 func NewServer(config *config.Config, repo *repository.Repository) *Server {
+	ioServer := socket.NewServer(nil, nil)
+
 	return &Server{
 		config:          config,
-		restAPIHandler:  rest.NewHandler(repo),
-		socketIOHandler: socketio.NewHandler(repo),
+		restAPIHandler:  rest.NewHandler(repo, ioServer),
+		socketIOHandler: socketio.NewHandler(repo, ioServer),
 	}
 }
 

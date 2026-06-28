@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/api"
 	"github.com/traP-jp/h26s_01/server/model"
@@ -149,7 +148,7 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		TurnIndex: int(nextTurn.TurnIndex),
 	}
 	slog.Info("[draw:stroke] publishing turn:started event", "event", turnStartedEvent)
-	pubsub.Publish(context.Background(), turnStartedEvent)
+	h.io.To(roomID).Emit("turn:started", turnStartedEvent)
 	slog.Info("[draw:stroke] turn:started event published")
 
 	return nil

@@ -18,9 +18,7 @@ type Handler struct {
 	repo         *repository.Repository
 }
 
-func NewHandler(repo *repository.Repository) *Handler {
-	ioServer := socket.NewServer(nil, nil)
-
+func NewHandler(repo *repository.Repository, ioServer *socket.Server) *Handler {
 	return &Handler{
 		ServeHandler: ioServer.ServeHandler(nil),
 		io:           ioServer,
@@ -119,28 +117,8 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 	socket.On("client:disconnect", createEventListenerForHandlersWithoutBody(socket, h.handleClientDisconnect))
 
 	go func() {
-		if err := h.handleRoomListUpdated(socket); err != nil {
-			slog.Error("handling room list updated", "error", err)
-		}
-	}()
-	go func() {
-		if err := h.roomUpdatedEventHandler(socket); err != nil {
-			slog.Error("handling room updated", "error", err)
-		}
-	}()
-	go func() {
-		if err := h.handleRoundAnswer(socket); err != nil {
-			slog.Error("handling round answer", "error", err)
-		}
-	}()
-	go func() {
-		if err := h.handleRoundStartedEvent(socket); err != nil {
-			slog.Error("handling round started", "error", err)
-		}
-	}()
-	go func() {
-		if err := h.handleTurnStartedEvent(socket); err != nil {
-			slog.Error("handling turn started", "error", err)
-		}
+		socket.On("disconnect", func(args ...any) {
+			slog.Info("Client disconnected", "socketID", socket.Id())
+		})
 	}()
 }
