@@ -24,8 +24,8 @@ const formatElapsed = (seconds: number | null) => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col w-xs border-r-4 border-primary">
-    <div class="p-10 text-4xl text-center bg-primary text-background">
+  <aside class="h-full min-w-0 overflow-hidden border-r-4 border-primary">
+    <div class="p-8 text-4xl text-center bg-primary text-background">
       <p>遊戯中</p>
     </div>
     <LeftSideSection>
@@ -42,9 +42,9 @@ const formatElapsed = (seconds: number | null) => {
     <LeftSideSection>
       <template #title>読み手</template>
       <template #default>
-        <div v-if="props.guesserId" class="flex items-center gap-3">
+        <div v-if="props.guesserId" class="flex min-w-0 items-center gap-3">
           <UserIcon :tra-qid="props.guesserId" size="small" />
-          <p class="break-all text-lg">{{ props.guesserId }}</p>
+          <p class="truncate text-lg" :title="props.guesserId">{{ props.guesserId }}</p>
         </div>
         <p v-else class="text-lg">-</p>
       </template>
@@ -54,13 +54,15 @@ const formatElapsed = (seconds: number | null) => {
       <template #default>
         <div v-if="props.currentDrawerId" class="flex flex-col gap-3">
           <p class="underline text-lg">只今作業中</p>
-          <div class="flex items-center gap-3">
+          <div class="flex min-w-0 items-center gap-3">
             <UserIcon :tra-qid="props.currentDrawerId" size="small" />
-            <p class="break-all text-lg">{{ props.currentDrawerId }}</p>
+            <p class="truncate text-lg" :title="props.currentDrawerId">
+              {{ props.currentDrawerId }}
+            </p>
           </div>
         </div>
         <p v-else class="text-lg">-</p>
       </template>
     </LeftSideSection>
-  </div>
+  </aside>
 </template>

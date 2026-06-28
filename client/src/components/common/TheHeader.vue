@@ -10,7 +10,7 @@ const { userId } = storeToRefs(useUserStore());
 
 <template>
   <header class="sticky top-0 bg-primary p-8 flex justify-between text-background items-center">
-    <h1 class="text-2xl">ゲームタイトル</h1>
+    <h1 class="text-2xl">以線伝心</h1>
     <div class="flex gap-3 items-center" v-if="userId">
       <UserIcon :tra-qid="userId" size="small" />
       <p>{{ userId }}</p>

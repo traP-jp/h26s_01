@@ -30,23 +30,27 @@ const handleAbort = async () => {
 <template>
   <div v-if="currentRoom" class="min-h-screen bg-background">
     <TheHeader />
-    <div>
-      <div class="flex flex-row gap-24 items-baseline mt-20 ml-28">
-        <p class="text-6xl text-primary">{{ currentRoom.name }}</p>
+    <main class="mx-auto flex w-full max-w-screen-xl flex-col gap-16 px-8 py-20">
+      <div class="flex flex-wrap items-baseline gap-x-24 gap-y-4">
+        <p class="min-w-0 max-w-full truncate text-6xl text-primary" :title="currentRoom.name">
+          {{ currentRoom.name }}
+        </p>
         <p class="text-4xl text-primary">{{ toKanjiNumber(currentRoom.members.length) }}人部屋</p>
       </div>
-      <div class="grid grid-cols-4 gap-x-28 gap-y-12 mt-16 ml-32 w-fit">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,10rem))] gap-x-12 gap-y-12">
         <div
           v-for="member in currentRoom.members"
           :key="member.id"
-          class="flex flex-col items-center w-fit gap-4"
+          class="flex min-w-0 flex-col items-center gap-4"
           :class="{ 'opacity-30': !member.isReady }"
         >
           <UserIcon :tra-qid="member.id" size="large" />
-          <p class="text-3xl text-center text-primary">{{ member.id }}</p>
+          <p class="w-full truncate text-center text-3xl text-primary" :title="member.id">
+            {{ member.id }}
+          </p>
         </div>
       </div>
-    </div>
+    </main>
     <div class="fixed bottom-16 right-24 flex flex-col items-end gap-4">
       <BaseButton variant="secondary" @btn-click="handleAbort">中止して戻る</BaseButton>
       <BaseButton

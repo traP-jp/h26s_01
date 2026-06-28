@@ -2,16 +2,19 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 
 import BaseButton from '@/components/common/BaseButton.vue';
+import LastResult from '@/components/room/last-result/LastResult.vue';
 import BottomGrid from '@/components/room/playing/BottomGrid.vue';
 import CenterGrid from '@/components/room/playing/CenterGrid.vue';
 import LeftSideGrid from '@/components/room/playing/LeftSideGrid.vue';
 import RightSideGrid from '@/components/room/playing/RightSideGrid.vue';
 import StrokeCanvas from '@/components/room/playing/StrokeCanvas.vue';
+import ResultMojigoto from '@/components/room/ResultMojigoto.vue';
 import { useGameSocket } from '@/composables/useGameSocket';
 import { useReturnHomeByDisconnect } from '@/composables/useReturnHomeByDisconnect';
 import { useGameStore } from '@/stores/game';
 import { useRoomStore } from '@/stores/room';
 import type { DrawStrokeEvent } from '@/types/api';
+import type { RoundResultViewData } from '@/types/result';
 
 const MIN_STROKE_LENGTH = 0.01;
 
@@ -53,19 +56,39 @@ const canSubmitDraftStroke = computed(
 
 const canSubmitAnswer = computed(() => gameStore.canSubmitAnswer && answer.value.trim().length > 0);
 
+const canAbort = computed(() => ['playing', 'roundResult'].includes(gameStore.phase));
+
+const roundResultData = computed<RoundResultViewData | null>(() => {
+  if (
+    gameStore.roundIndex === null ||
+    gameStore.roundAnswer === null ||
+    gameStore.guesserId === null
+  ) {
+    return null;
+  }
+
+  return {
+    count: gameStore.roundIndex,
+    actualAnswer: gameStore.roundAnswer.actualAnswer,
+    guesserAnswer: gameStore.roundAnswer.guesserAnswer,
+    guesserId: gameStore.guesserId,
+    strokes: gameStore.strokes,
+  };
+});
+
+const finalResultData = computed<RoundResultViewData[]>(() =>
+  gameStore.finalResult === null
+    ? []
+    : gameStore.finalResult.rounds.map((round, index) => ({
+        count: index + 1,
+        actualAnswer: round.actualAnswer,
+        guesserAnswer: round.guesserAnswer,
+        guesserId: round.guesserId,
+        strokes: round.strokes,
+      })),
+);
+
 const bottomMessage = computed(() => {
-  if (gameStore.phase === 'roundResult') {
-    return '回答結果を確認してください。';
-  }
-
-  if (gameStore.phase === 'ended') {
-    return 'ゲームが終了しました。';
-  }
-
-  if (gameStore.phase === 'aborted') {
-    return '切断が発生したためゲームは中止されました。';
-  }
-
   if (gameStore.isMyTurn) {
     return 'あなたの順番です。直線を一つ書き加えたら、確定を押してください。';
   }
@@ -107,12 +130,16 @@ const endRound = () => {
   gameSocket.endRound();
 };
 
+const returnHome = async () => {
+  await returnHomeByDisconnect();
+};
+
 const handleAbort = async () => {
   if (!window.confirm('ゲームを中止してトップへ戻りますか？')) {
     return;
   }
 
-  await returnHomeByDisconnect();
+  await returnHome();
 };
 
 onBeforeUnmount(() => {
@@ -121,57 +148,84 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-background text-primary">
-    <div class="fixed top-4 right-4 z-10">
-      <BaseButton variant="secondary" @btn-click="handleAbort">中止して戻る</BaseButton>
+  <div class="min-h-dvh bg-background text-primary">
+    <div v-if="gameStore.phase === 'playing'" class="grid h-dvh grid-rows-[1fr_auto]">
+      <div
+        class="grid min-h-0 grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)_minmax(16rem,22rem)] overflow-hidden"
+      >
+        <LeftSideGrid
+          :current-drawer-id="gameStore.currentDrawerId"
+          :elapsed-seconds="elapsedSeconds"
+          :guesser-id="gameStore.guesserId"
+          :remaining-strokes="gameStore.remainingStrokes"
+          :round-label="gameStore.roundLabel"
+          :turn-label="gameStore.turnLabel"
+        />
+        <CenterGrid :is-guesser="gameStore.isGuesser" :kanji="gameStore.kanji">
+          <div class="mx-auto w-full max-w-3xl">
+            <StrokeCanvas
+              v-model:draft-stroke="draftStroke"
+              :can-draw="gameStore.canDraw"
+              :disabled="gameStore.phase !== 'playing'"
+              :strokes="gameStore.strokes"
+            />
+          </div>
+          <p v-if="roomStore.currentRoom === null" class="text-xl">
+            部屋情報を取得できませんでした。
+          </p>
+        </CenterGrid>
+        <RightSideGrid
+          v-model:answer="answer"
+          :can-abort="canAbort"
+          :can-clear-stroke="draftStroke !== null"
+          :can-end-round="false"
+          :can-submit-answer="canSubmitAnswer"
+          :can-submit-stroke="canSubmitDraftStroke"
+          :is-guesser="gameStore.isGuesser"
+          :phase="gameStore.phase"
+          @abort="handleAbort"
+          @clear-stroke="clearDraftStroke"
+          @end-round="endRound"
+          @submit-answer="submitAnswer"
+          @submit-stroke="submitDraftStroke"
+        />
+      </div>
+      <BottomGrid :message="bottomMessage" />
     </div>
-    <div class="flex-1 flex justify-between overflow-hidden">
-      <LeftSideGrid
-        :current-drawer-id="gameStore.currentDrawerId"
-        :elapsed-seconds="elapsedSeconds"
-        :guesser-id="gameStore.guesserId"
-        :remaining-strokes="gameStore.remainingStrokes"
-        :round-label="gameStore.roundLabel"
-        :turn-label="gameStore.turnLabel"
-      />
-      <CenterGrid :is-guesser="gameStore.isGuesser" :kanji="gameStore.kanji">
-        <div class="w-[min(60vh,42rem)] max-w-full">
-          <StrokeCanvas
-            v-model:draft-stroke="draftStroke"
-            :can-draw="gameStore.canDraw"
-            :disabled="gameStore.phase !== 'playing'"
-            :strokes="gameStore.strokes"
-          />
-        </div>
-        <div v-if="gameStore.phase === 'roundResult' && gameStore.roundAnswer" class="text-3xl">
-          <p>回答: {{ gameStore.roundAnswer.guesserAnswer }}</p>
-          <p>正解: {{ gameStore.roundAnswer.actualAnswer }}</p>
-        </div>
-        <div v-else-if="gameStore.phase === 'ended' && gameStore.finalResult" class="text-3xl">
-          <p>{{ gameStore.finalResult.cleared ? '成功' : '失敗' }}</p>
-          <p>残機: {{ gameStore.finalResult.remainingLives }}</p>
-        </div>
-        <div v-else-if="gameStore.phase === 'aborted'" class="text-3xl">
-          <p>切断: {{ gameStore.disconnectedUserId ?? '-' }}</p>
-        </div>
-        <p v-if="roomStore.currentRoom === null" class="text-xl">
-          部屋情報を取得できませんでした。
-        </p>
-      </CenterGrid>
-      <RightSideGrid
-        v-model:answer="answer"
-        :can-clear-stroke="draftStroke !== null"
-        :can-end-round="gameStore.phase === 'roundResult'"
-        :can-submit-answer="canSubmitAnswer"
-        :can-submit-stroke="canSubmitDraftStroke"
-        :is-guesser="gameStore.isGuesser"
-        :phase="gameStore.phase"
-        @clear-stroke="clearDraftStroke"
-        @end-round="endRound"
-        @submit-answer="submitAnswer"
-        @submit-stroke="submitDraftStroke"
-      />
+
+    <ResultMojigoto
+      v-else-if="gameStore.phase === 'roundResult' && roundResultData !== null"
+      :can-abort="canAbort"
+      :result-data="roundResultData"
+      @abort="handleAbort"
+      @next="endRound"
+    />
+
+    <div
+      v-else-if="gameStore.phase === 'roundResult'"
+      class="min-h-dvh flex flex-col items-center justify-center gap-8 text-3xl"
+    >
+      <p>結果データを取得できませんでした。</p>
+      <BaseButton variant="primary" @btn-click="endRound">次の問題へ</BaseButton>
     </div>
-    <BottomGrid :message="bottomMessage" />
+
+    <LastResult
+      v-else-if="gameStore.phase === 'ended'"
+      :results="finalResultData"
+      @return-home="returnHome"
+    />
+
+    <div
+      v-else-if="gameStore.phase === 'aborted'"
+      class="min-h-dvh flex flex-col items-center justify-center gap-8 text-3xl"
+    >
+      <p>切断が発生したためゲームは中止されました。</p>
+      <p>切断したユーザー: {{ gameStore.disconnectedUserId ?? '-' }}</p>
+      <BaseButton variant="primary" @btn-click="returnHome">トップへ戻る</BaseButton>
+    </div>
+
+    <div v-else class="min-h-dvh flex items-center justify-center text-3xl">
+      ゲーム情報を待機しています。
+    </div>
   </div>
 </template>

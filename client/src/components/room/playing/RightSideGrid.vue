@@ -7,6 +7,7 @@ import LifeGage from './LifeGage.vue';
 const props = defineProps<{
   phase: GamePhase;
   answer: string;
+  canAbort: boolean;
   canClearStroke: boolean;
   canSubmitStroke: boolean;
   canSubmitAnswer: boolean;
@@ -16,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:answer': [answer: string];
+  abort: [];
   clearStroke: [];
   submitStroke: [];
   submitAnswer: [];
@@ -24,9 +26,15 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col w-xs p-8 justify-between">
-    <LifeGage />
-    <div v-if="props.phase === 'playing' && !props.isGuesser" class="flex flex-col gap-3">
+  <aside class="flex h-full min-w-0 flex-col gap-8 border-l-4 border-primary p-8">
+    <div class="flex flex-col gap-6">
+      <BaseButton v-if="props.canAbort" variant="secondary" @btn-click="emit('abort')">
+        途中で退出
+      </BaseButton>
+      <LifeGage />
+    </div>
+
+    <div v-if="props.phase === 'playing' && !props.isGuesser" class="mt-auto flex flex-col gap-3">
       <BaseButton
         variant="secondary"
         :disabled="!props.canClearStroke"
@@ -40,7 +48,10 @@ const emit = defineEmits<{
         >確定</BaseButton
       >
     </div>
-    <div v-else-if="props.phase === 'playing' && props.isGuesser" class="flex flex-col gap-3">
+    <div
+      v-else-if="props.phase === 'playing' && props.isGuesser"
+      class="mt-auto flex flex-col gap-3"
+    >
       <input
         :value="props.answer"
         class="outline-none text-2xl p-3 border-4 border-primary bg-background text-primary"
@@ -55,10 +66,10 @@ const emit = defineEmits<{
         >回答</BaseButton
       >
     </div>
-    <div v-else-if="props.phase === 'roundResult'" class="flex flex-col gap-3">
+    <div v-else-if="props.phase === 'roundResult'" class="mt-auto flex flex-col gap-3">
       <BaseButton variant="primary" :disabled="!props.canEndRound" @btn-click="emit('endRound')"
         >次の問題へ</BaseButton
       >
     </div>
-  </div>
+  </aside>
 </template>
