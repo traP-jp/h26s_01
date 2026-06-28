@@ -28,7 +28,7 @@ func (r *Repository) GetRoundByRoomID(ctx context.Context, roomID string) (uuid.
 	return currentRoundID, nil
 }
 
-func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID string) (int, error) {
+func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID uuid.UUID) (int, error) {
 	var totalTime int
 	var roundIDs []uuid.UUID
 	if err := r.db.SelectContext(ctx, &roundIDs, "SELECT id FROM rounds WHERE game_id = ?", roomID); err != nil {
@@ -43,4 +43,33 @@ func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID string) (int, e
 		totalTime += int(roundResult.TimeMs)
 	}
 	return totalTime, nil
+}
+
+func (r *Repository) GetAllRounds(ctx context.Context, roomID uuid.UUID) ([]model.RoundWithResult, error) {
+	var rounds []model.Round
+	if err := r.db.SelectContext(ctx, &rounds, "SELECT * FROM rounds WHERE game_id = ?", roomID); err != nil {
+		return nil, err
+	}
+
+	results := make([]model.RoundWithResult, 0, len(rounds))
+	for _, round := range rounds {
+		roundResult, err := r.GetRoundResult(ctx, round.ID) 
+		if err != nil {
+			return nil, err
+		}
+
+		kanji, err := r.GetKanji(ctx, round.KanjiID)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, model.RoundWithResult{
+			ID: round.ID,
+			GuesserID: round.GuesserID,
+			GuesserAnswer: roundResult.GuesserAnswer,
+			ActualAnswer: kanji,
+			TimeMs: roundResult.TimeMs,
+		})
+	}
+	return results, nil
 }
