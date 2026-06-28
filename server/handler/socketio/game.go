@@ -3,6 +3,7 @@ package socketio
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
@@ -11,10 +12,15 @@ import (
 )
 
 func (h *Handler) handleGameReady(s *socket.Socket) error {
+	slog.Info("Handling game:ready event", "socketID", s.Id())
+
 	user, err := h.getLoggedInUser(s)
 	if err != nil {
+		slog.Error("Failed to get logged in user", "error", err)
 		return err
 	}
+
+	slog.Info("User is ready", "userID", user.ID)
 
 	rooms := s.Rooms()
 	myID := string(s.Id())
@@ -36,6 +42,8 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 	if roomID == uuid.Nil {
 		return errors.New("roomID is empty")
 	}
+
+	slog.Info("Setting user ready", "roomID", roomID, "userID", user.ID)
 
 	if err := h.repo.SetUserReady(context.Background(), roomID, user.ID); err != nil {
 		return err
@@ -62,12 +70,18 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 	pubsub.Publish(context.Background(), &roomListUpdatedEvent)
 	pubsub.Publish(context.Background(), &roomUpdatedEvent)
 
+	slog.Info("Checking if all users are ready", "roomID", roomID)
+
 	if h.isAllUsersReady(context.Background(), roomID) {
+		slog.Info("All users ready, starting game", "roomID", roomID)
 		err := h.repo.StartGame(context.Background(), roomID, len(room.Members))
 		if err != nil {
 			return err
 		}
+		slog.Info("Game started, beginning first round", "roomID", roomID)
 		h.handleRoundStarted(s, roomID)
+	} else {
+		slog.Info("Not all users ready yet", "roomID", roomID)
 	}
 
 	return nil
