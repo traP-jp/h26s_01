@@ -110,6 +110,7 @@ func createEventListenerForHandlersWithBody[T any](socket *socket.Socket, handle
 }
 
 func (h *Handler) registerEventHandlers(socket *socket.Socket) {
+	slog.Info("Registering event handlers", "socketID", socket.Id())
 	socket.On("room:join", createEventListenerForHandlersWithBody(socket, h.handleJoinRoom))
 	socket.On("game:ready", createEventListenerForHandlersWithoutBody(socket, h.handleGameReady))
 	socket.On("draw:stroke", createEventListenerForHandlersWithBody(socket, h.handleDrawStroke))
