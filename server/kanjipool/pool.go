@@ -4,7 +4,16 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/csv"
+	"math/rand"
+	"sort"
 	"strconv"
+)
+
+const (
+	MinStroke    = 11
+	MaxStroke    = 17
+	MaxCorrect   = 9
+	MaxIncorrect = 3
 )
 
 //go:embed kanji.csv
@@ -33,4 +42,28 @@ func parseKanji() ([]Kanji, error) {
 		kanjis = append(kanjis, Kanji{kanji, stroke})
 	}
 	return kanjis, nil
+}
+
+func SelectKanjies(playerCount int) ([]Kanji, error) {
+	kanjies, err := parseKanji()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []Kanji
+	for _, kanji := range kanjies {
+		if kanji.Stroke >= MinStroke && kanji.Stroke <= MaxStroke {
+			filtered = append(filtered, kanji)
+		}
+	}
+
+	rand.Shuffle(len(filtered), func(i, j int) {
+		filtered[i], filtered[j] = filtered[j], filtered[i]
+	})
+
+	requiredNum := MaxCorrect + MaxIncorrect + playerCount - 2
+
+	requiredKanjies := filtered[:requiredNum]
+	sort.SliceStable(requiredKanjies, func(i, j int) bool { return requiredKanjies[i].Stroke < requiredKanjies[j].Stroke })
+	return requiredKanjies, nil
 }

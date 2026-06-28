@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/traP-jp/h26s_01/server/kanjipool"
 	"github.com/traP-jp/h26s_01/server/model"
 )
 
@@ -74,9 +75,28 @@ func (r *Repository) SetUserReady(ctx context.Context, roomId uuid.UUID, userId 
 	return err
 }
 
-func (r *Repository) StartGame(ctx context.Context, roomId uuid.UUID) error {
-	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = 'playing' WHERE id = ?", roomId)
-	return err
+func (r *Repository) StartGame(ctx context.Context, roomId uuid.UUID, playerCount int) error {
+	if _, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = 'playing' WHERE id = ?", roomId); err != nil {
+		return err
+	}
+	if _, err := r.db.ExecContext(ctx, "INSERT INTO games (room_id) VALUES (?)", roomId); err != nil {
+		return err
+	}
+
+	kanjies, err := kanjipool.SelectKanjies(playerCount)
+	if err != nil {
+		return err
+	}
+	gameKanjiesId, err := uuid.NewV7()
+	if err != nil {
+		return err
+	}
+	for i, kanji := range kanjies {
+		if _, err = r.db.ExecContext(ctx, "INSERT INTO game_kanjies (id, game_id, character, kanji_order) VALUES (?, ?, ?, ?)", gameKanjiesId, roomId, kanji.Char, i+1); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *Repository) GetRoom(ctx context.Context, roomId uuid.UUID) (*model.Room, error) {

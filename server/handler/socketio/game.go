@@ -63,7 +63,7 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 	pubsub.Publish(s.Request().Context(), roomUpdatedEvent)
 
 	if h.isAllUsersReady(s.Request().Context(), roomID) {
-		err := h.repo.StartGame(s.Request().Context(), roomID)
+		err := h.repo.StartGame(s.Request().Context(), roomID, len(room.Members))
 		if err != nil {
 			return err
 		}

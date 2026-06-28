@@ -10,13 +10,9 @@ import (
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/traP-jp/h26s_01/server/api"
+	"github.com/traP-jp/h26s_01/server/kanjipool"
 	"github.com/traP-jp/h26s_01/server/model"
 	"github.com/zishang520/socket.io/servers/socket/v3"
-)
-
-const (
-	maxCorrect   = 9
-	maxIncorrect = 3
 )
 
 func (h *Handler) handleRoundEnd(s *socket.Socket) error {
@@ -43,11 +39,11 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 		return err
 	}
 
-	remainLives := maxIncorrect - incorrect
-	if incorrect >= maxIncorrect {
+	remainLives := kanjipool.MaxIncorrect - incorrect
+	if incorrect >= kanjipool.MaxIncorrect {
 		// TODO: game:end (cleared: false)
 		h.handleGameEnd(s, roomID, round, remainLives, false)
-	} else if correct >= maxCorrect {
+	} else if correct >= kanjipool.MaxCorrect {
 		// TODO: game:end (cleared: true)
 		h.handleGameEnd(s, roomID, round, remainLives, true)
 	} else {
