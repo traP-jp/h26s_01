@@ -1,7 +1,6 @@
 package socketio
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/google/uuid"
@@ -39,12 +38,7 @@ func (h *Handler) handleClientDisconnect(s *socket.Socket) error {
 		UserId: user.ID,
 	}
 
-	eventBytes, err := json.Marshal(clientDisconnectedEvent)
-	if err != nil {
-		return err
-	}
-
-	s.To(socket.Room(roomID.String())).Emit("client:disconnected", eventBytes)
+	s.To(socket.Room(roomID.String())).Emit("client:disconnected", clientDisconnectedEvent)
 
 	return nil
 }

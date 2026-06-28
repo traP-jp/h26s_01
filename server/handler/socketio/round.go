@@ -3,7 +3,6 @@ package socketio
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -113,13 +112,7 @@ func (h *Handler) handleRoundAnswer(socket *socket.Socket) error {
 		case <-ctx.Done():
 			return nil
 		case event := <-eventCh:
-			b, err := json.Marshal(event)
-
-			if err != nil {
-				return err
-			}
-
-			socket.Emit("round:answer", b)
+			socket.Emit("round:answer", event)
 		}
 	}
 }
@@ -138,13 +131,7 @@ func (h *Handler) handleRoundStartedEvent(socket *socket.Socket) error {
 		case <-ctx.Done():
 			return nil
 		case event := <-eventCh:
-			b, err := json.Marshal(event)
-
-			if err != nil {
-				return err
-			}
-
-			socket.Emit("round:started", b)
+			socket.Emit("round:started", event)
 		}
 	}
 }

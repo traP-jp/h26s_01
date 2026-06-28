@@ -2,7 +2,6 @@ package socketio
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/WillYingling/pubsub"
@@ -66,13 +65,7 @@ func (h *Handler) roomUpdatedEventHandler(s *socket.Socket) error {
 		case <-ctx.Done():
 			return nil
 		case event := <-eventCh:
-			b, err := json.Marshal(event)
-
-			if err != nil {
-				return err
-			}
-
-			s.Emit("room:updated", b)
+			s.Emit("room:updated", event)
 		}
 	}
 }

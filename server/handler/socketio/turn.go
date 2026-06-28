@@ -2,7 +2,6 @@ package socketio
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/WillYingling/pubsub"
 	"github.com/traP-jp/h26s_01/server/api"
@@ -22,12 +21,7 @@ func (h *Handler) handleTurnStartedEvent(socket *socket.Socket) error {
 		case <-ctx.Done():
 			return nil
 		case event := <-eventCh:
-			b, err := json.Marshal(event)
-			if err != nil {
-				return err
-			}
-
-			socket.Emit("turn:started", b)
+			socket.Emit("turn:started", event)
 		}
 	}
 }
