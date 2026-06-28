@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS games(
 CREATE TABLE IF NOT EXISTS game_kanjies(
     id UUID NOT NULL PRIMARY KEY,
     game_id UUID NOT NULL,
-    character VARCHAR(1) NOT NULL,
+    `character` VARCHAR(1) NOT NULL,
     kanji_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
     FOREIGN KEY (game_id) REFERENCES games(room_id)
 );
