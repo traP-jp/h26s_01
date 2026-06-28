@@ -8,11 +8,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div
-    class="flex"
-    role="img"
-    :aria-label="`残機${toKanjiNumber(props.remainingLives)}`"
-  >
+  <div class="flex" role="img" :aria-label="`残機${toKanjiNumber(props.remainingLives)}`">
     <svg
       v-for="n in MAX_LIVES"
       :key="n"
