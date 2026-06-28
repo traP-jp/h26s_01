@@ -97,4 +97,9 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 			slog.Error("handling room updated", "error", err)
 		}
 	}()
+	go func() {
+		if err := h.handleRoundAnswer(socket); err != nil {
+			slog.Error("handling round answer", "error", err)
+		}
+	}()
 }
