@@ -4,16 +4,37 @@ import StrokeCanvasView from '@/components/room/playing/StrokeCanvasView.vue';
 import type { RoundResultViewData } from '@/types/result';
 import { toKanjiNumber } from '@/utils/to-kanji-number';
 
-defineProps<{
-  resultData: RoundResultViewData;
-}>();
+withDefaults(
+  defineProps<{
+    resultData: RoundResultViewData;
+    fitViewport?: boolean;
+  }>(),
+  {
+    fitViewport: false,
+  },
+);
 </script>
 
 <template>
-  <section class="w-full bg-background">
+  <section
+    class="w-full bg-background"
+    :class="{ 'flex min-h-0 flex-col overflow-y-auto': fitViewport }"
+  >
     <p class="text-primary text-5xl">{{ toKanjiNumber(resultData.count) }}文字目</p>
-    <div class="mt-8 grid items-start gap-10 lg:grid-cols-2">
-      <StrokeCanvasView :strokes="resultData.strokes" />
+    <div
+      class="mt-8 grid items-start gap-10 lg:grid-cols-2"
+      :class="{ 'min-h-0 flex-1': fitViewport }"
+    >
+      <div
+        class="result-canvas-stage grid min-h-0 place-items-center"
+        :class="{ 'result-canvas-stage--fitted h-full': fitViewport }"
+      >
+        <StrokeCanvasView
+          class="result-canvas"
+          :class="{ 'result-canvas--fitted': fitViewport }"
+          :strokes="resultData.strokes"
+        />
+      </div>
       <div class="flex min-w-0 flex-col gap-8">
         <p class="text-primary text-7xl">
           推測{{ resultData.actualAnswer === resultData.guesserAnswer ? '成功' : '失敗' }}
@@ -40,3 +61,14 @@ defineProps<{
     </div>
   </section>
 </template>
+
+<style scoped>
+.result-canvas-stage--fitted {
+  container-type: size;
+}
+
+.result-canvas--fitted {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+</style>

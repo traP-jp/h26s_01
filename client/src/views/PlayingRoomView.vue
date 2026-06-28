@@ -162,9 +162,12 @@ onBeforeUnmount(() => {
           :turn-label="gameStore.turnLabel"
         />
         <CenterGrid :is-guesser="gameStore.isGuesser" :kanji="gameStore.kanji">
-          <div class="mx-auto w-full max-w-3xl">
+          <div
+            class="playing-canvas-stage mx-auto grid min-h-0 w-full max-w-3xl flex-1 place-items-center overflow-hidden"
+          >
             <StrokeCanvas
               v-model:draft-stroke="draftStroke"
+              class="playing-canvas"
               :can-draw="gameStore.canDraw"
               :disabled="gameStore.phase !== 'playing'"
               :strokes="gameStore.strokes"
@@ -211,6 +214,7 @@ onBeforeUnmount(() => {
 
     <LastResult
       v-else-if="gameStore.phase === 'ended'"
+      :cleared="gameStore.finalResult?.cleared ?? false"
       :results="finalResultData"
       @return-home="returnHome"
     />
@@ -229,3 +233,14 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.playing-canvas-stage {
+  container-type: size;
+}
+
+.playing-canvas {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+</style>

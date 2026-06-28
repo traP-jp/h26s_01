@@ -16,8 +16,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="min-h-dvh bg-background">
-    <div class="mx-auto flex w-full max-w-screen-xl flex-col gap-10 px-8 py-10">
+  <div class="h-dvh overflow-hidden bg-background">
+    <div
+      class="mx-auto grid h-full w-full max-w-screen-xl grid-rows-[auto_0.25rem_minmax(0,1fr)] gap-10 px-8 py-10"
+    >
       <div class="flex flex-wrap items-center justify-between gap-4">
         <p class="text-primary text-6xl">途中結果</p>
         <div class="flex flex-wrap gap-3">
@@ -28,7 +30,7 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="h-1 w-full bg-primary"></div>
-      <Result1Moji :result-data="props.resultData" />
+      <Result1Moji fit-viewport :result-data="props.resultData" />
     </div>
   </div>
 </template>

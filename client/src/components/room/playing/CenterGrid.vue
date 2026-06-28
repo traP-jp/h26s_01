@@ -8,8 +8,8 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 p-8">
-    <div class="flex items-center gap-3 text-2xl">
+  <main class="flex min-h-0 min-w-0 flex-col gap-6 overflow-hidden p-8">
+    <div class="flex items-center justify-center gap-3 text-2xl">
       <template v-if="!props.isGuesser && props.kanji !== null">
         <p>お題は</p>
         <CharLikeCanvas>{{ props.kanji }}</CharLikeCanvas>
@@ -18,5 +18,5 @@ const props = defineProps<{
       <p v-else>お題は読み手には表示されません</p>
     </div>
     <slot />
-  </div>
+  </main>
 </template>
