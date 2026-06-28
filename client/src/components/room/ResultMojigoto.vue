@@ -1,26 +1,34 @@
 <script setup lang="ts">
-import BaseButton from '../common/BaseButton.vue';
-import Result1Moji, { type ResultProps } from './Result1Moji.vue';
+import BaseButton from '@/components/common/BaseButton.vue';
+import type { RoundResultViewData } from '@/types/result';
 
-const test: ResultProps = {
-  count: 3,
-  actualAnswer: '詰',
-  guesserAnswer: '読',
-  traqId: 'yadorigi',
-};
+import Result1Moji from './Result1Moji.vue';
+
+const props = defineProps<{
+  resultData: RoundResultViewData;
+  canAbort: boolean;
+}>();
+
+const emit = defineEmits<{
+  abort: [];
+  next: [];
+}>();
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
-    <div class="w-full h-1 bg-background mt-16"></div>
-    <!--上に余白できない問題の一時的解決-->
-    <div class="flex flex-row mt-16 ml-24 gap-208">
-      <p class="text-primary text-6xl">途中結果</p>
-      <BaseButton variant="primary">次の問題へ</BaseButton>
-    </div>
-    <div class="w-full h-1 bg-primary mt-16"></div>
-    <div class="mt-12">
-      <Result1Moji :result-data="test" />
+  <div class="min-h-dvh bg-background">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col gap-10 px-8 py-10">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-primary text-6xl">途中結果</p>
+        <div class="flex flex-wrap gap-3">
+          <BaseButton v-if="props.canAbort" variant="secondary" @btn-click="emit('abort')">
+            途中で退出
+          </BaseButton>
+          <BaseButton variant="primary" @btn-click="emit('next')">次の問題へ</BaseButton>
+        </div>
+      </div>
+      <div class="h-1 w-full bg-primary"></div>
+      <Result1Moji :result-data="props.resultData" />
     </div>
   </div>
 </template>

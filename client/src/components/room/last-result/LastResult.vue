@@ -1,57 +1,60 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import BaseButton from '@/components/common/BaseButton.vue';
 import TheHeader from '@/components/common/TheHeader.vue';
+import Result1Moji from '@/components/room/Result1Moji.vue';
+import { MAX_ROUNDS } from '@/constants/game';
+import type { RoundResultViewData } from '@/types/result';
+import { toKanjiNumber } from '@/utils/to-kanji-number';
 
-import Result1Moji from '../Result1Moji.vue';
-import { type ResultProps } from '../Result1Moji.vue';
-
-export interface LastResultProps {
-  successGame: number;
-  loseGame: number;
-}
-defineProps<{
-  lastData: LastResultProps;
+const props = defineProps<{
+  results: RoundResultViewData[];
 }>();
 
-const test: ResultProps = {
-  count: 3,
-  actualAnswer: '詰',
-  guesserAnswer: '読',
-  traqId: 'yadorigi',
-};
+const emit = defineEmits<{
+  returnHome: [];
+}>();
+
+const successCount = computed(
+  () => props.results.filter((result) => result.actualAnswer === result.guesserAnswer).length,
+);
+const loseCount = computed(() => props.results.length - successCount.value);
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-dvh bg-background">
     <TheHeader />
-    <div class="mt-16 mx-32 flex justify-end">
-      <BaseButton variant="primary">退出</BaseButton>
-    </div>
-    <div class="flex flex-row justify-center gap-32 mt-12">
-      <div class="flex flex-col items-end">
-        <p class="text-primary text-6xl mt-8">結果</p>
-        <div class="flex flex-col items-end">
-          <p class="text-primary text-6xl mt-48">推測成功</p>
-          <p class="text-primary text-6xl mt-32">推測失敗</p>
+    <main class="mx-auto flex w-full max-w-screen-xl flex-col gap-16 px-8 py-10">
+      <div class="flex justify-end">
+        <BaseButton variant="primary" @btn-click="emit('returnHome')">トップへ戻る</BaseButton>
+      </div>
+
+      <section class="grid items-end gap-10 text-primary lg:grid-cols-[auto_minmax(0,1fr)]">
+        <div class="grid gap-8 lg:justify-items-end">
+          <p class="text-6xl">結果</p>
+          <div class="grid gap-6 text-5xl">
+            <p>推測成功</p>
+            <p>推測失敗</p>
+          </div>
         </div>
+        <div class="grid gap-6">
+          <p class="text-8xl">結果</p>
+          <p class="text-5xl">
+            {{ toKanjiNumber(successCount) }}文字 / {{ toKanjiNumber(MAX_ROUNDS) }}文字
+          </p>
+          <p class="text-5xl">
+            {{ toKanjiNumber(loseCount) }}文字 / {{ toKanjiNumber(MAX_ROUNDS) }}文字
+          </p>
+        </div>
+      </section>
+
+      <div v-if="props.results.length === 0" class="text-center text-primary text-4xl">
+        結果がありません
       </div>
-      <div class="flex flex-col">
-        <p class="text-primary text-9xl">成功</p>
-        <p class="text-primary text-6xl mt-40">
-          {{
-            lastData.successGame.toLocaleString('ja-JP-u-nu-hanidec', { useGrouping: false })
-          }}文字 / 九文字
-        </p>
-        <p class="text-primary text-6xl mt-32">
-          {{ lastData.loseGame.toLocaleString('ja-JP-u-nu-hanidec', { useGrouping: false }) }}文字 /
-          九文字
-        </p>
+      <div v-else class="flex flex-col gap-16">
+        <Result1Moji v-for="result in props.results" :key="result.count" :result-data="result" />
       </div>
-    </div>
-    <div class="flex flex-col gap-48 mt-48 justify-start ml-64">
-      <div v-for="count in 9" :key="count">
-        <Result1Moji :result-data="test" />
-      </div>
-    </div>
+    </main>
   </div>
 </template>

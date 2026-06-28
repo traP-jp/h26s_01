@@ -1,46 +1,42 @@
 <script setup lang="ts">
-import UserIcon from '../common/UserIcon.vue';
-export interface ResultProps {
-  count: number;
-  actualAnswer: string;
-  guesserAnswer: string;
-  traqId: string;
-}
+import UserIcon from '@/components/common/UserIcon.vue';
+import StrokeCanvasView from '@/components/room/playing/StrokeCanvasView.vue';
+import type { RoundResultViewData } from '@/types/result';
+import { toKanjiNumber } from '@/utils/to-kanji-number';
+
 defineProps<{
-  resultData: ResultProps;
+  resultData: RoundResultViewData;
 }>();
 </script>
 
 <template>
-  <div class="w-full h-156 bg-background">
-    <p class="text-primary text-6xl ml-48">
-      {{ resultData.count.toLocaleString('ja-JP-u-nu-hanidec', { useGrouping: false }) }}文字目
-    </p>
-    <div class="flex flex-row gap-24">
-      <div class="w-128 h-128 bg-white mt-8 ml-48"></div>
-      <!--キャンバス代わりの白正方形-->
-      <!--ここにキャンバス-->
-      <div class="flex flex-col">
-        <p class="text-primary text-8xl">
+  <section class="w-full bg-background">
+    <p class="text-primary text-5xl">{{ toKanjiNumber(resultData.count) }}文字目</p>
+    <div class="mt-8 grid items-start gap-10 lg:grid-cols-2">
+      <StrokeCanvasView :strokes="resultData.strokes" />
+      <div class="flex min-w-0 flex-col gap-8">
+        <p class="text-primary text-7xl">
           推測{{ resultData.actualAnswer === resultData.guesserAnswer ? '成功' : '失敗' }}
         </p>
-        <div class="flex flex-row items-center gap-16 mt-12 ml-16">
-          <p class="text-primary text-4xl">お題</p>
-          <div class="w-32 h-32 bg-white flex items-center justify-center">
-            <p class="text-primary text-8xl">{{ resultData.actualAnswer }}</p>
+        <div class="grid gap-4 text-primary">
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-6">
+            <p class="text-4xl">お題</p>
+            <div class="aspect-square w-full max-w-32 bg-white flex items-center justify-center">
+              <p class="text-7xl">{{ resultData.actualAnswer }}</p>
+            </div>
           </div>
-        </div>
-        <div class="flex flex-row items-center gap-16 mt-4 ml-16">
-          <p class="text-primary text-4xl">回答</p>
-          <div class="w-32 h-32 bg-white flex items-center justify-center">
-            <p class="text-primary text-8xl">{{ resultData.guesserAnswer }}</p>
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-6">
+            <p class="text-4xl">回答</p>
+            <div class="aspect-square w-full max-w-32 bg-white flex items-center justify-center">
+              <p class="text-7xl">{{ resultData.guesserAnswer }}</p>
+            </div>
           </div>
-        </div>
-        <div class="flex flex-row items-center gap-12 mt-8 ml-16">
-          <p class="text-primary text-4xl">回答者</p>
-          <UserIcon :tra-qid="resultData.traqId" size="small" />
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-6">
+            <p class="text-4xl">回答者</p>
+            <UserIcon :tra-qid="resultData.guesserId" size="small" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
