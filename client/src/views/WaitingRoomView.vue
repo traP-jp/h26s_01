@@ -41,13 +41,14 @@ const handleAbort = async () => {
         <div
           v-for="member in currentRoom.members"
           :key="member.id"
-          class="flex min-w-0 flex-col items-center gap-4"
+          class="flex min-w-0 flex-col items-center"
           :class="{ 'opacity-30': !member.isReady }"
         >
-          <UserIcon :tra-qid="member.id" size="large" />
+          <UserIcon :tra-qid="member.id" size="large" class="m-2" />
           <p class="w-full truncate text-center text-3xl text-primary" :title="member.id">
             {{ member.id }}
           </p>
+          <p v-if="member.isReady" class="text-primary text-lg">準備完了</p>
         </div>
       </div>
     </main>
