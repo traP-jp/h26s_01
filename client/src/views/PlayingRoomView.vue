@@ -90,14 +90,14 @@ const finalResultData = computed<RoundResultViewData[]>(() =>
 
 const bottomMessage = computed(() => {
   if (gameStore.isMyTurn) {
-    return 'あなたの順番です。直線を一つ書き加えたら、確定を押してください。';
+    return 'あなたが書く番です。直線を一つ書き加えたら、確定を押してください。';
   }
 
   if (gameStore.isGuesser) {
-    return '読み手です。推測したお題を入力してください。';
+    return 'あなたは読み手です。推測したお題を入力してください。';
   }
 
-  return '他の人が書いています。';
+  return '他の人が書いています。順番になるまで待ってください。';
 });
 
 const clearDraftStroke = () => {
