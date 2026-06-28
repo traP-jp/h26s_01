@@ -5,11 +5,13 @@ import (
 	_ "embed"
 	"encoding/csv"
 	"math/rand"
+	"sort"
 	"strconv"
 )
 
 const (
-	MinStroke    = 13
+	MinStroke    = 11
+	MaxStroke    = 17
 	MaxCorrect   = 9
 	MaxIncorrect = 3
 )
@@ -50,7 +52,7 @@ func SelectKanjies(playerCount int) ([]Kanji, error) {
 
 	var filtered []Kanji
 	for _, kanji := range kanjies {
-		if kanji.Stroke >= MinStroke {
+		if kanji.Stroke >= MinStroke && kanji.Stroke <= MaxStroke {
 			filtered = append(filtered, kanji)
 		}
 	}
@@ -58,6 +60,10 @@ func SelectKanjies(playerCount int) ([]Kanji, error) {
 	rand.Shuffle(len(filtered), func(i, j int) {
 		filtered[i], filtered[j] = filtered[j], filtered[i]
 	})
-	requiredNum := MaxCorrect + MaxIncorrect + playerCount
-	return filtered[:requiredNum], nil
+
+	requiredNum := MaxCorrect + MaxIncorrect + playerCount - 2
+
+	requiredKanjies := filtered[:requiredNum]
+	sort.SliceStable(requiredKanjies, func(i, j int) bool { return requiredKanjies[i].Stroke < requiredKanjies[j].Stroke })
+	return requiredKanjies, nil
 }
