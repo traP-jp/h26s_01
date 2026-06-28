@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { MAX_ROUNDS, MAX_STROKES } from '@/constants/game';
+import { MAX_LIVES, MAX_ROUNDS, MAX_STROKES } from '@/constants/game';
 import type {
   ClientDisconnectedEvent,
   GameEndEvent,
@@ -24,6 +24,7 @@ type GameState = {
   turnIndex: number | null;
   kanji: string | null;
   strokes: Stroke[];
+  remainingLives: number;
   roundStartedAt: number | null;
   roundAnswer: RoundAnswerEvent | null;
   finalResult: GameEndEvent | null;
@@ -41,6 +42,7 @@ export const useGameStore = defineStore('game', {
     turnIndex: null,
     kanji: null,
     strokes: [],
+    remainingLives: MAX_LIVES,
     roundStartedAt: null,
     roundAnswer: null,
     finalResult: null,
@@ -94,6 +96,9 @@ export const useGameStore = defineStore('game', {
     startRound(event: RoundStartedEvent) {
       this.phase = 'playing';
       this.roundIndex = event.roundIndex;
+      if (event.roundIndex === 1) {
+        this.remainingLives = MAX_LIVES;
+      }
       this.guesserId = event.guesserId;
       this.currentDrawerId = null;
       this.turnIndex = null;
@@ -115,6 +120,9 @@ export const useGameStore = defineStore('game', {
     showRoundAnswer(event: RoundAnswerEvent) {
       this.phase = 'roundResult';
       this.roundAnswer = event;
+      if (event.guesserAnswer !== event.actualAnswer) {
+        this.remainingLives = Math.max(this.remainingLives - 1, 0);
+      }
       this.kanji = null;
       this.currentDrawerId = null;
       this.roundStartedAt = null;
@@ -122,6 +130,7 @@ export const useGameStore = defineStore('game', {
     endGame(event: GameEndEvent) {
       this.phase = 'ended';
       this.finalResult = event;
+      this.remainingLives = event.remainingLives;
       this.kanji = null;
       this.currentDrawerId = null;
       this.roundStartedAt = null;
@@ -141,6 +150,7 @@ export const useGameStore = defineStore('game', {
       this.turnIndex = null;
       this.kanji = null;
       this.strokes = [];
+      this.remainingLives = MAX_LIVES;
       this.roundStartedAt = null;
       this.roundAnswer = null;
       this.finalResult = null;

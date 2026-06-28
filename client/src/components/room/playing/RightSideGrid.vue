@@ -13,6 +13,7 @@ const props = defineProps<{
   canSubmitAnswer: boolean;
   canEndRound: boolean;
   isGuesser: boolean;
+  remainingLives: number;
 }>();
 
 const emit = defineEmits<{
@@ -31,7 +32,7 @@ const emit = defineEmits<{
       <BaseButton v-if="props.canAbort" variant="secondary" @btn-click="emit('abort')">
         途中で退出
       </BaseButton>
-      <LifeGage />
+      <LifeGage :remaining-lives="props.remainingLives" />
     </div>
 
     <div v-if="props.phase === 'playing' && !props.isGuesser" class="mt-auto flex flex-col gap-3">
