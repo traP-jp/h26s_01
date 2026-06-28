@@ -32,8 +32,8 @@ const formatProgress = (label: string) =>
 
 <template>
   <aside class="h-full min-w-0 overflow-hidden border-r-4 border-primary">
-    <div class="p-8 text-4xl text-center bg-primary text-background">
-      <p>遊戯中</p>
+    <div class="px-5 py-3 text-center bg-primary text-background">
+      <img src="/public/favicon.ico" alt="以線伝心のロゴ" class="size-24" />
     </div>
     <LeftSideSection>
       <template #title>今の状況</template>

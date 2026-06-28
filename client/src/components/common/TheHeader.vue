@@ -10,7 +10,7 @@ const { userId } = storeToRefs(useUserStore());
 
 <template>
   <header
-    class="sticky top-0 bg-primary px-8 py-3 flex justify-between text-background items-center"
+    class="sticky top-0 bg-primary px-5 py-3 flex justify-between text-background items-center"
   >
     <img src="/public/favicon.ico" alt="以線伝心のロゴ" class="size-24" />
     <div class="flex gap-3 items-center" v-if="userId">
