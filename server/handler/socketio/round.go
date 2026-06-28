@@ -246,5 +246,33 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 
 	pubsub.Publish(s.Request().Context(), roundStartedEvent)
 
+	var firstDrawerID string
+	for _, member := range members {
+		if member.UserID != round.GuesserID && member.IsConnected {
+			firstDrawerID = member.UserID
+			break
+		}
+	}
+
+	if firstDrawerID != "" {
+		turn := model.Turn{
+			RoundID:   round.ID,
+			TurnIndex: 1,
+			DrawerID:  firstDrawerID,
+		}
+		if err := h.repo.CreateTurn(s.Request().Context(), &turn); err != nil {
+			return err
+		}
+		if err := h.repo.UpdateRoundCurrentTurn(s.Request().Context(), round.ID, turn.ID); err != nil {
+			return err
+		}
+
+		turnStartedEvent := api.TurnStartedEvent{
+			DrawerId:  turn.DrawerID,
+			TurnIndex: int(turn.TurnIndex),
+		}
+		pubsub.Publish(s.Request().Context(), turnStartedEvent)
+	}
+
 	return nil
 }
