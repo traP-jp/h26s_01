@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseButton from '../common/BaseButton.vue';
 import Result1Moji, { type ResultProps } from './Result1Moji.vue';
+
 const test: ResultProps = {
   count: 3,
   actualAnswer: '詰',
