@@ -24,7 +24,7 @@ const handleClick = async () => {
     <p>{{ room.name }}</p>
     <div class="grid grid-cols-3 items-center gap-3 w-xl">
       <div class="flex justify-center gap-1">
-        <UserIcon v-for="member in room.members" :tra-qid="member.id" size="medium" />
+        <UserIcon v-for="member in room.members" :tra-qid="member.id" size="small" />
       </div>
       <p class="text-center">{{ toKanjiNumber(room.members.length) }}人が参加中</p>
       <BaseButton v-if="room.status == 'waiting'" variant="primary" v-on:btn-click="handleClick"
