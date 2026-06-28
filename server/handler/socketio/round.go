@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -29,12 +30,12 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 		return err
 	}
 
-	round, err := h.repo.GetCurrentRoundByRoomID(s.Request().Context(), roomUUID)
+	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
 
-	correct, incorrect, err := h.repo.CountRoundResult(s.Request().Context(), round.GameID)
+	correct, incorrect, err := h.repo.CountRoundResult(context.Background(), round.GameID)
 	if err != nil {
 		return err
 	}
@@ -55,13 +56,13 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 }
 
 func (h *Handler) handleGameEnd(s *socket.Socket, s_roomId socket.Room, round model.Round, remainLives int, isClear bool) error {
-	h.repo.ChangeGameStatus(s.Request().Context(), round.GameID, "completed")
-	roundwithResult, err := h.repo.GetAllRounds(s.Request().Context(), round.GameID)
+	h.repo.ChangeGameStatus(context.Background(), round.GameID, "completed")
+	roundwithResult, err := h.repo.GetAllRounds(context.Background(), round.GameID)
 	if err != nil {
 		return err
 	}
 
-	totalTime, err := h.repo.CalcTotalTimeMs(s.Request().Context(), round.GameID)
+	totalTime, err := h.repo.CalcTotalTimeMs(context.Background(), round.GameID)
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func (h *Handler) handleGameEnd(s *socket.Socket, s_roomId socket.Room, round mo
 }
 
 func (h *Handler) handleRoundAnswer(socket *socket.Socket) error {
-	ctx := socket.Request().Context()
+	ctx := context.Background()
 	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoundAnswerEvent](ctx)
 
 	socket.On("disconnect", func(args ...any) {
@@ -125,7 +126,7 @@ func (h *Handler) handleRoundAnswer(socket *socket.Socket) error {
 
 func (h *Handler) handleRoundStartedEvent(socket *socket.Socket) error {
 
-	ctx := socket.Request().Context()
+	ctx := context.Background()
 	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoundStartedEvent](ctx)
 
 	socket.On("disconnect", func(args ...any) {
@@ -153,17 +154,17 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 
 	round.GameID = roomUUID
 
-	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(s.Request().Context(), roomUUID)
+	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
 
-	kanjiesID, err := h.repo.GetKanjiesOrderByOrder(s.Request().Context(), roomUUID)
+	kanjiesID, err := h.repo.GetKanjiesOrderByOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
 
-	currentRound, err := h.repo.GetCurrentRoundByRoomID(s.Request().Context(), roomUUID)
+	currentRound, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err == nil {
 
 		currentGuesserID := currentRound.GuesserID
@@ -224,11 +225,11 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 
 	round.StartedAt = time.Now()
 
-	if err := h.repo.CreateRound(s.Request().Context(), &round); err != nil {
+	if err := h.repo.CreateRound(context.Background(), &round); err != nil {
 		return err
 	}
 
-	kanji, err := h.repo.GetKanji(s.Request().Context(), round.KanjiID)
+	kanji, err := h.repo.GetKanji(context.Background(), round.KanjiID)
 	if err != nil {
 		return err
 	}
@@ -240,7 +241,7 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 		RoundIndex: int(round.RoundIndex),
 	}
 
-	pubsub.Publish(s.Request().Context(), roundStartedEvent)
+	pubsub.Publish(context.Background(), roundStartedEvent)
 
 	var firstDrawerID string
 	for _, member := range members {
@@ -256,10 +257,10 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 			TurnIndex: 1,
 			DrawerID:  firstDrawerID,
 		}
-		if err := h.repo.CreateTurn(s.Request().Context(), &turn); err != nil {
+		if err := h.repo.CreateTurn(context.Background(), &turn); err != nil {
 			return err
 		}
-		if err := h.repo.UpdateRoundCurrentTurn(s.Request().Context(), round.ID, turn.ID); err != nil {
+		if err := h.repo.UpdateRoundCurrentTurn(context.Background(), round.ID, turn.ID); err != nil {
 			return err
 		}
 
@@ -267,7 +268,7 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 			DrawerId:  turn.DrawerID,
 			TurnIndex: int(turn.TurnIndex),
 		}
-		pubsub.Publish(s.Request().Context(), turnStartedEvent)
+		pubsub.Publish(context.Background(), turnStartedEvent)
 	}
 
 	return nil

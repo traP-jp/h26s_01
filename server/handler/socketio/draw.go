@@ -1,6 +1,8 @@
 package socketio
 
 import (
+	"context"
+
 	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/api"
@@ -24,7 +26,7 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		return err
 	}
 
-	turnId, err := h.repo.GetTurnIDbyRoomID(s.Request().Context(), roomUUID)
+	turnId, err := h.repo.GetTurnIDbyRoomID(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
@@ -37,18 +39,18 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		Y2:     event.Y2,
 	}
 
-	if err = h.repo.SaveStroke(s.Request().Context(), stroke); err != nil {
+	if err = h.repo.SaveStroke(context.Background(), stroke); err != nil {
 		return err
 	}
 
 	s.To(roomID).Emit("draw:stroke", event)
 
-	round, err := h.repo.GetCurrentRoundByRoomID(s.Request().Context(), roomUUID)
+	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
 
-	turnCount, err := h.repo.GetTurnCountByRoundID(s.Request().Context(), round.ID)
+	turnCount, err := h.repo.GetTurnCountByRoundID(context.Background(), round.ID)
 	if err != nil {
 		return err
 	}
@@ -57,12 +59,12 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		return nil
 	}
 
-	currentTurn, err := h.repo.GetTurnByID(s.Request().Context(), turnId)
+	currentTurn, err := h.repo.GetTurnByID(context.Background(), turnId)
 	if err != nil {
 		return err
 	}
 
-	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(s.Request().Context(), roomUUID)
+	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
@@ -105,10 +107,10 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		TurnIndex: turnCount + 1,
 		DrawerID:  nextDrawerID,
 	}
-	if err := h.repo.CreateTurn(s.Request().Context(), &nextTurn); err != nil {
+	if err := h.repo.CreateTurn(context.Background(), &nextTurn); err != nil {
 		return err
 	}
-	if err := h.repo.UpdateRoundCurrentTurn(s.Request().Context(), round.ID, nextTurn.ID); err != nil {
+	if err := h.repo.UpdateRoundCurrentTurn(context.Background(), round.ID, nextTurn.ID); err != nil {
 		return err
 	}
 
@@ -116,7 +118,7 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		DrawerId:  nextTurn.DrawerID,
 		TurnIndex: int(nextTurn.TurnIndex),
 	}
-	pubsub.Publish(s.Request().Context(), turnStartedEvent)
+	pubsub.Publish(context.Background(), turnStartedEvent)
 
 	return nil
 }
