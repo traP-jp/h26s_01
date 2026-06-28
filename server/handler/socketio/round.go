@@ -17,6 +17,8 @@ import (
 )
 
 func (h *Handler) handleRoundEnd(s *socket.Socket) error {
+	slog.Info("Handling round:end event", "socketID", s.Id())
+
 	var roomID socket.Room
 	for _, room := range s.Rooms().Keys() {
 		if room != socket.Room(s.Id()) {
@@ -30,6 +32,8 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 		return err
 	}
 
+	slog.Info("Getting current round", "roomID", roomUUID)
+
 	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err != nil {
 		return err
@@ -41,14 +45,19 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 	}
 
 	remainLives := kanjipool.MaxIncorrect - incorrect
+	slog.Info("Round results", "correct", correct, "incorrect", incorrect, "remainLives", remainLives)
+
 	if incorrect >= kanjipool.MaxIncorrect {
 		// TODO: game:end (cleared: false)
+		slog.Info("Game over - too many incorrect answers", "gameID", round.GameID)
 		h.handleGameEnd(s, roomID, round, remainLives, false)
 	} else if correct >= kanjipool.MaxCorrect {
 		// TODO: game:end (cleared: true)
+		slog.Info("Game cleared - all correct answers", "gameID", round.GameID)
 		h.handleGameEnd(s, roomID, round, remainLives, true)
 	} else {
 		// TODO: round:started
+		slog.Info("Starting next round", "gameID", round.GameID)
 		h.handleRoundStarted(s, roomUUID)
 	}
 
@@ -142,15 +151,19 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 
 	round.GameID = roomUUID
 
+	slog.Info("Starting round setup", "roomID", roomUUID)
+
 	members, err := h.repo.GetRoomMembersOrderedByGuesserOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
+	slog.Info("Got room members", "count", len(members))
 
 	kanjiesID, err := h.repo.GetKanjiesOrderByOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
+	slog.Info("Got kanjies", "count", len(kanjiesID))
 
 	currentRound, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err == nil {
@@ -211,11 +224,14 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 		}
 	}
 
+	slog.Info("Round configured", "roundIndex", round.RoundIndex, "guesserID", round.GuesserID, "kanjiID", round.KanjiID)
+
 	round.StartedAt = time.Now()
 
 	if err := h.repo.CreateRound(context.Background(), &round); err != nil {
 		return err
 	}
+	slog.Info("Round created", "roundID", round.ID)
 
 	kanji, err := h.repo.GetKanji(context.Background(), round.KanjiID)
 	if err != nil {
@@ -260,6 +276,9 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 			TurnIndex: int(turn.TurnIndex),
 		}
 		pubsub.Publish(context.Background(), turnStartedEvent)
+		slog.Info("Published turn:started event", "event", turnStartedEvent)
+	} else {
+		slog.Warn("No first drawer found", "roundID", round.ID)
 	}
 
 	return nil
