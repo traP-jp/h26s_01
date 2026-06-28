@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/WillYingling/pubsub"
 	"github.com/traP-jp/h26s_01/server/api"
 	"github.com/zishang520/socket.io/servers/socket/v3"
 )
@@ -46,26 +45,8 @@ func (h *Handler) handleJoinRoom(s *socket.Socket, event api.RoomJoinEvent) erro
 		return err
 	}
 
-	pubsub.Publish(context.Background(), &roomListUpdatedEvent)
-	pubsub.Publish(context.Background(), &roomUpdatedEvent)
+	h.io.Emit("room_list:updated", &roomListUpdatedEvent)
+	h.io.To(socket.Room(event.RoomId.String())).Emit("room:updated", &roomUpdatedEvent)
 
 	return nil
-}
-
-func (h *Handler) roomUpdatedEventHandler(s *socket.Socket) error {
-	ctx := context.Background()
-	eventCh, unsubscribe := pubsub.SubscribeTo[*api.RoomUpdatedEvent](ctx)
-
-	s.On("disconnect", func(args ...any) {
-		unsubscribe()
-	})
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case event := <-eventCh:
-			s.Emit("room:updated", event)
-		}
-	}
 }

@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/traP-jp/h26s_01/server/api"
@@ -107,43 +106,6 @@ func (h *Handler) handleGameEnd(s *socket.Socket, s_roomId socket.Room, round mo
 
 	s.To(s_roomId).Emit("game:end", gameEndEvent)
 	return nil
-}
-
-func (h *Handler) handleRoundAnswer(socket *socket.Socket) error {
-	ctx := context.Background()
-	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoundAnswerEvent](ctx)
-
-	socket.On("disconnect", func(args ...any) {
-		unsubscribe()
-	})
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case event := <-eventCh:
-			socket.Emit("round:answer", event)
-		}
-	}
-}
-
-func (h *Handler) handleRoundStartedEvent(socket *socket.Socket) error {
-
-	ctx := context.Background()
-	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoundStartedEvent](ctx)
-
-	socket.On("disconnect", func(args ...any) {
-		unsubscribe()
-	})
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case event := <-eventCh:
-			socket.Emit("round:started", event)
-		}
-	}
 }
 
 func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error {
@@ -252,7 +214,7 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 	}
 	slog.Info("Publishing round:started event", "event", roundStartedEvent)
 
-	pubsub.Publish(context.Background(), roundStartedEvent)
+	h.io.To(socket.Room(roomUUID.String())).Emit("round:started", roundStartedEvent)
 	slog.Info("Published round:started event", "event", roundStartedEvent)
 
 	var firstDrawerID string
@@ -280,7 +242,7 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 			DrawerId:  turn.DrawerID,
 			TurnIndex: int(turn.TurnIndex),
 		}
-		pubsub.Publish(context.Background(), turnStartedEvent)
+		h.io.To(socket.Room(roomUUID.String())).Emit("turn:started", turnStartedEvent)
 		slog.Info("Published turn:started event", "event", turnStartedEvent)
 	} else {
 		slog.Warn("No first drawer found", "roundID", round.ID)

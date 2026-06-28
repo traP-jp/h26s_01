@@ -5,15 +5,14 @@ import (
 	"errors"
 	"time"
 
-	"github.com/WillYingling/pubsub"
 	"github.com/google/uuid"
 	"github.com/traP-jp/h26s_01/server/api"
 	"github.com/zishang520/socket.io/servers/socket/v3"
 )
 
-func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubmitEvent) error {
-	rooms := socket.Rooms()
-	myID := string(socket.Id())
+func (h *Handler) handleAnswerSubmit(s *socket.Socket, event api.AnswerSubmitEvent) error {
+	rooms := s.Rooms()
+	myID := string(s.Id())
 	var err error
 	var roomID uuid.UUID
 
@@ -56,7 +55,7 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 		GuesserAnswer: event.Answer,
 	}
 
-	pubsub.Publish(context.Background(), roundAnswerEvent)
+	h.io.To(socket.Room(roomID.String())).Emit("round:answer", roundAnswerEvent)
 
 	return nil
 }
