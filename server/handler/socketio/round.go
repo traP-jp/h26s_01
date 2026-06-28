@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/WillYingling/pubsub"
-	"github.com/traP-jp/h26s_01/server/api"
-	"github.com/zishang520/socket.io/servers/socket/v3"
-
 	"github.com/google/uuid"
+	"github.com/traP-jp/h26s_01/server/api"
 	"github.com/zishang520/socket.io/servers/socket/v3"
 )
 
