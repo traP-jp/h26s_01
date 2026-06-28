@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/WillYingling/pubsub"
@@ -9,7 +10,7 @@ import (
 )
 
 func (h *Handler) handleTurnStartedEvent(socket *socket.Socket) error {
-	ctx := socket.Request().Context()
+	ctx := context.Background()
 	eventCh, unsubscribe := pubsub.SubscribeTo[api.TurnStartedEvent](ctx)
 
 	socket.On("disconnect", func(args ...any) {

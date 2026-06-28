@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 
@@ -16,20 +17,20 @@ func (h *Handler) handleJoinRoom(s *socket.Socket, event api.RoomJoinEvent) erro
 	if err != nil {
 		return err
 	}
-	currentRoom, err := h.repo.GetRoom(s.Request().Context(), event.RoomId)
+	currentRoom, err := h.repo.GetRoom(context.Background(), event.RoomId)
 	if err != nil {
 		return err
 	}
 	if len(currentRoom.Members) == MaxNumPlayers {
 		return errors.New("The player limit has been reached.")
 	}
-	err = h.repo.JoinRoom(s.Request().Context(), event.RoomId, user.ID)
+	err = h.repo.JoinRoom(context.Background(), event.RoomId, user.ID)
 	if err != nil {
 		return err
 	}
 
 	s.Join(socket.Room(event.RoomId.String()))
-	room, err := h.repo.GetRoom(s.Request().Context(), event.RoomId)
+	room, err := h.repo.GetRoom(context.Background(), event.RoomId)
 	if err != nil {
 		return err
 	}
@@ -46,14 +47,14 @@ func (h *Handler) handleJoinRoom(s *socket.Socket, event api.RoomJoinEvent) erro
 		return err
 	}
 
-	pubsub.Publish(s.Request().Context(), &roomListUpdatedEvent)
-	pubsub.Publish(s.Request().Context(), &roomUpdatedEvent)
+	pubsub.Publish(context.Background(), &roomListUpdatedEvent)
+	pubsub.Publish(context.Background(), &roomUpdatedEvent)
 
 	return nil
 }
 
 func (h *Handler) roomUpdatedEventHandler(s *socket.Socket) error {
-	ctx := s.Request().Context()
+	ctx := context.Background()
 	eventCh, unsubscribe := pubsub.SubscribeTo[*api.RoomUpdatedEvent](ctx)
 
 	s.On("disconnect", func(args ...any) {

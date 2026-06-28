@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -33,7 +34,7 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 		return errors.New("roomID is empty")
 	}
 
-	currentRound, err := h.repo.GetRoundByRoomID(socket.Request().Context(), roomID.String())
+	currentRound, err := h.repo.GetRoundByRoomID(context.Background(), roomID.String())
 	if err != nil {
 		return err
 	}
@@ -41,11 +42,11 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 
 	currentTime := time.Now()
 
-	if err := h.repo.SubmitAnswer(socket.Request().Context(), currentRoundUUID, currentTime, event.Answer); err != nil {
+	if err := h.repo.SubmitAnswer(context.Background(), currentRoundUUID, currentTime, event.Answer); err != nil {
 		return err
 	}
 
-	actualAnswer, err := h.repo.GetActualAnswer(socket.Request().Context(), currentRoundUUID)
+	actualAnswer, err := h.repo.GetActualAnswer(context.Background(), currentRoundUUID)
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func (h *Handler) handleAnswerSubmit(socket *socket.Socket, event api.AnswerSubm
 		GuesserAnswer: event.Answer,
 	}
 
-	pubsub.Publish(socket.Request().Context(), roundAnswerEvent)
+	pubsub.Publish(context.Background(), roundAnswerEvent)
 
 	return nil
 }

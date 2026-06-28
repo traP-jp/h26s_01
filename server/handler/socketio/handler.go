@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -44,7 +45,7 @@ func (h *Handler) Start() (err error) {
 func (h *Handler) getLoggedInUser(socket *socket.Socket) (*model.User, error) {
 	userID := socket.Handshake().Headers.Header().Get("X-Forwarded-User")
 
-	return h.repo.GetOrCreateUser(socket.Request().Context(), userID)
+	return h.repo.GetOrCreateUser(context.Background(), userID)
 }
 
 func createEventListenerForHandlersWithoutBody(socket *socket.Socket, handler func(socket *socket.Socket) error) func(args ...any) {
