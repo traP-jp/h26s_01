@@ -13,9 +13,11 @@ type Room struct {
 }
 
 type RoomMember struct {
-	RoomID  uuid.UUID `db:"room_id"`
-	UserID  string    `db:"user_id"`
-	IsReady bool      `db:"is_ready"`
+	RoomID       uuid.UUID `db:"room_id"`
+	UserID       string    `db:"user_id"`
+	IsReady      bool      `db:"is_ready"`
+	GuesserOrder uint8     `db:"guesser_order"`
+	IsConnected  bool      `db:"is_connected"`
 }
 
 func (r *Room) AsAPIRoom() *api.Room {

@@ -102,4 +102,9 @@ func (h *Handler) registerEventHandlers(socket *socket.Socket) {
 			slog.Error("handling round answer", "error", err)
 		}
 	}()
+	go func() {
+		if err := h.handleRoundStartedEvent(socket); err != nil {
+			slog.Error("handling round started", "error", err)
+		}
+	}()
 }

@@ -67,6 +67,7 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		if err != nil {
 			return err
 		}
+		h.handleRoundStarted(s, roomID)
 	}
 
 	return nil

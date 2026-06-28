@@ -13,3 +13,11 @@ func (r *Repository) GetKanji(ctx context.Context, kanjiID uuid.UUID) (string, e
 	}
 	return character, nil
 }
+
+func (r *Repository) GetKanjiesOrderByOrder(ctx context.Context, gameID uuid.UUID) ([]uuid.UUID, error) {
+	var kanjiesID []uuid.UUID
+	if err := r.db.SelectContext(ctx, &kanjiesID, "SELECT id FROM game_kanjies WHERE game_id = ? ORDER BY kanji_order ASC", gameID); err != nil {
+		return nil, err
+	}
+	return kanjiesID, nil
+}

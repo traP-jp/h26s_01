@@ -9,7 +9,8 @@ type Game struct {
 }
 
 type GameKanji struct {
-	ID        uuid.UUID `db:"id"`
-	GameID    uuid.UUID `db:"game_id"`
-	Character string    `db:"character"`
+	ID         uuid.UUID `db:"id"`
+	GameID     uuid.UUID `db:"game_id"`
+	Character  string    `db:"character"`
+	KanjiOrder uint8     `db:"kanji_order"`
 }

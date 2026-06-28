@@ -26,3 +26,26 @@ func (r *Repository) GetRoundByRoomID(ctx context.Context, roomID string) (uuid.
 
 	return currentRoundID, nil
 }
+
+func (r *Repository) CreateRound(ctx context.Context, round *model.Round) error {
+	var err error
+	round.ID, err = uuid.NewV7()
+	if err != nil {
+		return err
+	}
+	query := "INSERT INTO rounds (id, game_id, round_index, guesser_id, kanji_id, started_at) VALUES (?, ?, ?, ?, ?, ?) "
+	if err := r.db.GetContext(ctx, &round, query, round.ID, round.GameID, round.RoundIndex, round.GuesserID, round.KanjiID, round.StartedAt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Repository) GetCurrentRoundIndexByRoomID(ctx context.Context, gameID uuid.UUID) (uint8, error) {
+	var roundIndex uint8
+
+	if err := r.db.GetContext(ctx, &roundIndex, "SELECT round_index FROM rounds WHERE game_id = ? ORDER BY round_index DESC LIMIT 1", gameID); err != nil {
+		return 0, err
+	}
+
+	return roundIndex, nil
+}
