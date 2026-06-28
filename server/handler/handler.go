@@ -27,6 +27,10 @@ func (s *Server) Start() error {
 	e := echo.New()
 	handler := s.restAPIHandler
 
+	if err := s.socketIOHandler.Start(); err != nil {
+		return err
+	}
+
 	api.RegisterHandlers(e, handler)
 	e.Any("/socket.io/*", echo.WrapHandler(s.socketIOHandler.ServeHandler))
 
