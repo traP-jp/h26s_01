@@ -47,14 +47,14 @@ func (h *Handler) handleJoinRoom(s *socket.Socket, event api.RoomJoinEvent) erro
 	}
 
 	pubsub.Publish(s.Request().Context(), &roomListUpdatedEvent)
-	pubsub.Publish(s.Request().Context(), roomUpdatedEvent)
+	pubsub.Publish(s.Request().Context(), &roomUpdatedEvent)
 
 	return nil
 }
 
 func (h *Handler) roomUpdatedEventHandler(s *socket.Socket) error {
 	ctx := s.Request().Context()
-	eventCh, unsubscribe := pubsub.SubscribeTo[api.RoomUpdatedEvent](ctx)
+	eventCh, unsubscribe := pubsub.SubscribeTo[*api.RoomUpdatedEvent](ctx)
 
 	s.On("disconnect", func(args ...any) {
 		unsubscribe()
