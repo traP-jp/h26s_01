@@ -10,14 +10,10 @@ const handleRoomUpdated = (event: RoomUpdatedEvent) => {
   const roomStore = useRoomStore();
   const currentRoomId = roomStore.roomId;
 
-  if (currentRoomId !== null && event.room.id !== currentRoomId) {
-    roomUpdatedHandlers.forEach((handler) => {
-      handler(event);
-    });
-    return;
+  if (currentRoomId !== null && event.room.id === currentRoomId) {
+    roomStore.setRoom(event.room);
   }
 
-  roomStore.setRoom(event.room);
   roomUpdatedHandlers.forEach((handler) => {
     handler(event);
   });
