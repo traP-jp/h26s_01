@@ -23,5 +23,6 @@ type RoundWithResult struct {
     GuesserAnswer string    `db:"guesser_answer"`
     ActualAnswer  string    `db:"character"`
     TimeMs        uint32    `db:"time_ms"`
+	Strokes       []StrokeWithDrawerID `db:"-"`
 }
 

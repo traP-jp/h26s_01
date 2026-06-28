@@ -63,12 +63,18 @@ func (r *Repository) GetAllRounds(ctx context.Context, roomID uuid.UUID) ([]mode
 			return nil, err
 		}
 
+		strokes, err := r.GetAllStrokes(ctx, round.ID)
+		if err != nil {
+			return nil, err
+		}
+		
 		results = append(results, model.RoundWithResult{
 			ID: round.ID,
 			GuesserID: round.GuesserID,
 			GuesserAnswer: roundResult.GuesserAnswer,
 			ActualAnswer: kanji,
 			TimeMs: roundResult.TimeMs,
+			Strokes: strokes,
 		})
 	}
 	return results, nil
