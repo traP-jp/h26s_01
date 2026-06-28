@@ -214,6 +214,7 @@ onBeforeUnmount(() => {
 
     <LastResult
       v-else-if="gameStore.phase === 'ended'"
+      :cleared="gameStore.finalResult?.cleared ?? false"
       :results="finalResultData"
       @return-home="returnHome"
     />

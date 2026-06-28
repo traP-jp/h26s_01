@@ -9,6 +9,7 @@ import type { RoundResultViewData } from '@/types/result';
 import { toKanjiNumber } from '@/utils/to-kanji-number';
 
 const props = defineProps<{
+  cleared: boolean;
   results: RoundResultViewData[];
 }>();
 
@@ -39,7 +40,7 @@ const loseCount = computed(() => props.results.length - successCount.value);
           </div>
         </div>
         <div class="grid gap-6">
-          <p class="text-8xl">結果</p>
+          <p class="text-8xl">{{ props.cleared ? '成功' : '不成功' }}</p>
           <p class="text-5xl">
             {{ toKanjiNumber(successCount) }}文字 / {{ toKanjiNumber(MAX_ROUNDS) }}文字
           </p>
