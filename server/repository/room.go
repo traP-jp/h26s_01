@@ -96,6 +96,16 @@ func (r *Repository) GetRoom(ctx context.Context, roomId uuid.UUID) (*model.Room
 	return &room, nil
 }
 
+func (r *Repository) GetRoomMembersOrderedByGuesserOrder(ctx context.Context, roomId uuid.UUID) ([]model.RoomMember, error) {
+	var members []model.RoomMember
+
+	if err := r.db.SelectContext(ctx, &members, "SELECT room_id, user_id, is_ready, guesser_order FROM room_members WHERE room_id = ? ORDER BY guesser_order ASC", roomId); err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
 func (r *Repository) ChangeGameStatus(ctx context.Context, roomId uuid.UUID, status string) error {
 	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = '?' WHERE id = ?", status, roomId)
 	return err
