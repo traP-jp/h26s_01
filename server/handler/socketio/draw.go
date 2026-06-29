@@ -52,8 +52,20 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 	}
 	slog.Info("[draw:stroke] stroke saved")
 
-	s.To(roomID).Emit("draw:stroke", event)
-	slog.Info("[draw:stroke] emitted to room", "roomID", roomID)
+	user, err := h.getLoggedInUser(s)
+	if err != nil {
+		slog.Error("[draw:stroke] failed to get logged in user", "error", err)
+		return err
+	}
+	apiStroke := api.Stroke{
+		DrawerId: user.ID,
+		X1:       event.X1,
+		Y1:       event.Y1,
+		X2:       event.X2,
+		Y2:       event.Y2,
+	}
+	s.To(roomID).Emit("draw:stroke", apiStroke)
+	slog.Info("[draw:stroke] emitted to room", "roomID", roomID, "stroke", apiStroke)
 
 	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err != nil {
