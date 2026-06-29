@@ -69,7 +69,7 @@ func (r *Repository) CalcTotalTimeMs(ctx context.Context, roomID uuid.UUID) (int
 }
 
 func (r *Repository) UpdateGameCurrentRound(ctx context.Context, gameID uuid.UUID, roundID uuid.UUID) error {
-	_, err := r.db.ExecContext(ctx, "UPDATE games SET current_round_id = ? WHERE id = ?", roundID, gameID)
+	_, err := r.db.ExecContext(ctx, "UPDATE games SET current_round_id = ? WHERE room_id = ?", roundID, gameID)
 	return err
 }
 
