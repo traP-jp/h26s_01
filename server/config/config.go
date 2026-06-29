@@ -26,6 +26,7 @@ func (c *Config) MySQLConfig() *mysql.Config {
 	mySQLConfig.Addr = net.JoinHostPort(c.DBHost, strconv.Itoa(c.DBPort))
 	mySQLConfig.DBName = c.DBName
 	mySQLConfig.Collation = "utf8mb4_general_ci"
+	mySQLConfig.ParseTime = true
 
 	return mySQLConfig
 }
