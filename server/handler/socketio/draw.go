@@ -64,7 +64,7 @@ func (h *Handler) handleDrawStroke(s *socket.Socket, event api.DrawStrokeEvent) 
 		X2:       event.X2,
 		Y2:       event.Y2,
 	}
-	s.To(roomID).Emit("draw:stroke", apiStroke)
+	h.io.To(roomID).Emit("draw:stroke", apiStroke)
 	slog.Info("[draw:stroke] emitted to room", "roomID", roomID, "stroke", apiStroke)
 
 	round, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
