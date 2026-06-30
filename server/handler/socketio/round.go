@@ -164,12 +164,10 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 
 		currentKanjiID := currentRound.KanjiID
 
-		if currentRoundIndex > 1 {
-			for i, kanji := range kanjiesID {
-				if kanji == currentKanjiID {
-					round.KanjiID = kanjiesID[i+1]
-					break
-				}
+		for i, kanji := range kanjiesID {
+			if kanji == currentKanjiID {
+				round.KanjiID = kanjiesID[i+1]
+				break
 			}
 		}
 	} else {
