@@ -104,7 +104,7 @@ func (h *Handler) handleGameEnd(s *socket.Socket, s_roomId socket.Room, round mo
 		Rounds:         apiRounds,
 	}
 
-	s.To(s_roomId).Emit("game:end", gameEndEvent)
+	h.io.To(s_roomId).Emit("game:end", gameEndEvent)
 	return nil
 }
 
