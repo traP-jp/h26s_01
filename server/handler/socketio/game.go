@@ -98,7 +98,9 @@ func (h *Handler) handleGameReady(s *socket.Socket) error {
 		h.io.To(socket.Room(roomID.String())).Emit("room:updated", &roomUpdatedEvent)
 
 		slog.Info("Game started, beginning first round", "roomID", roomID)
-		h.handleRoundStarted(s, roomID)
+		if err := h.handleRoundStarted(s, roomID); err != nil {
+			return err
+		}
 	} else {
 		slog.Info("Not all users ready yet", "roomID", roomID)
 	}

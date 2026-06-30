@@ -58,8 +58,27 @@ func (r *Repository) CreateRoom(ctx context.Context, roomName string, userId str
 }
 
 func (r *Repository) JoinRoom(ctx context.Context, roomId uuid.UUID, userId string) error {
-	_, err := r.db.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id) VALUES (?, ?)", roomId, userId)
-	return err
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var lockedRoomID uuid.UUID
+	if err := tx.GetContext(ctx, &lockedRoomID, "SELECT id FROM rooms WHERE id = ? FOR UPDATE", roomId); err != nil {
+		return err
+	}
+
+	var nextGuesserOrder uint8
+	if err := tx.GetContext(ctx, &nextGuesserOrder, "SELECT COALESCE(MAX(guesser_order), 0) + 1 FROM room_members WHERE room_id = ?", roomId); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, "INSERT INTO room_members (room_id, user_id, guesser_order) VALUES (?, ?, ?)", roomId, userId, nextGuesserOrder); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (r *Repository) SetUserReady(ctx context.Context, roomId uuid.UUID, userId string) error {
@@ -119,6 +138,6 @@ func (r *Repository) GetRoomMembersOrderedByGuesserOrder(ctx context.Context, ro
 }
 
 func (r *Repository) ChangeGameStatus(ctx context.Context, roomId uuid.UUID, status string) error {
-	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = '?' WHERE id = ?", status, roomId)
+	_, err := r.db.ExecContext(ctx, "UPDATE rooms SET status = ? WHERE id = ?", status, roomId)
 	return err
 }
