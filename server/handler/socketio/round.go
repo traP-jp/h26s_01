@@ -49,22 +49,30 @@ func (h *Handler) handleRoundEnd(s *socket.Socket) error {
 	if incorrect >= kanjipool.MaxIncorrect {
 		// TODO: game:end (cleared: false)
 		slog.Info("Game over - too many incorrect answers", "gameID", round.GameID)
-		h.handleGameEnd(s, roomID, round, remainLives, false)
+		if err := h.handleGameEnd(s, roomID, round, remainLives, false); err != nil {
+			return err
+		}
 	} else if correct >= kanjipool.MaxCorrect {
 		// TODO: game:end (cleared: true)
 		slog.Info("Game cleared - all correct answers", "gameID", round.GameID)
-		h.handleGameEnd(s, roomID, round, remainLives, true)
+		if err := h.handleGameEnd(s, roomID, round, remainLives, true); err != nil {
+			return err
+		}
 	} else {
 		// TODO: round:started
 		slog.Info("Starting next round", "gameID", round.GameID)
-		h.handleRoundStarted(s, roomUUID)
+		if err := h.handleRoundStarted(s, roomUUID); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (h *Handler) handleGameEnd(s *socket.Socket, s_roomId socket.Room, round model.Round, remainLives int, isClear bool) error {
-	h.repo.ChangeGameStatus(context.Background(), round.GameID, "completed")
+	if err := h.repo.ChangeGameStatus(context.Background(), round.GameID, "completed"); err != nil {
+		return err
+	}
 	roundwithResult, err := h.repo.GetAllRounds(context.Background(), round.GameID)
 	if err != nil {
 		return err
@@ -120,12 +128,18 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 		return err
 	}
 	slog.Info("Got room members", "count", len(members))
+	if len(members) == 0 {
+		return errors.New("room members not found")
+	}
 
 	kanjiesID, err := h.repo.GetKanjiesOrderByOrder(context.Background(), roomUUID)
 	if err != nil {
 		return err
 	}
 	slog.Info("Got kanjies", "count", len(kanjiesID))
+	if len(kanjiesID) == 0 {
+		return errors.New("kanjies not found")
+	}
 
 	currentRound, err := h.repo.GetCurrentRoundByRoomID(context.Background(), roomUUID)
 	if err == nil {
@@ -135,13 +149,16 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 		round.RoundIndex = currentRoundIndex + 1
 
 		var lastOrder uint8 = 0
-		if currentRoundIndex > 1 {
-			for _, member := range members {
-				if member.UserID == currentGuesserID {
-					lastOrder = member.GuesserOrder
-					break
-				}
+		foundCurrentGuesser := false
+		for _, member := range members {
+			if member.UserID == currentGuesserID {
+				lastOrder = member.GuesserOrder
+				foundCurrentGuesser = true
+				break
 			}
+		}
+		if !foundCurrentGuesser {
+			return errors.New("current guesser not found in room members")
 		}
 
 		var nextGuesserID string
@@ -160,27 +177,34 @@ func (h *Handler) handleRoundStarted(s *socket.Socket, roomUUID uuid.UUID) error
 				}
 			}
 		}
+		if nextGuesserID == "" {
+			return errors.New("next guesser not found")
+		}
 		round.GuesserID = nextGuesserID
 
 		currentKanjiID := currentRound.KanjiID
 
+		foundNextKanji := false
 		for i, kanji := range kanjiesID {
 			if kanji == currentKanjiID {
+				if i+1 >= len(kanjiesID) {
+					return errors.New("next kanji not found")
+				}
 				round.KanjiID = kanjiesID[i+1]
+				foundNextKanji = true
 				break
 			}
+		}
+		if !foundNextKanji {
+			return errors.New("current kanji not found in game kanjies")
 		}
 	} else {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return err
 		} else {
 			round.RoundIndex = 1
-			if len(members) > 0 {
-				round.GuesserID = members[0].UserID
-			}
-			if len(kanjiesID) > 0 {
-				round.KanjiID = kanjiesID[0]
-			}
+			round.GuesserID = members[0].UserID
+			round.KanjiID = kanjiesID[0]
 		}
 	}
 
